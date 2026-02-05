@@ -282,13 +282,6 @@ docker run -p 3000:3000 app:latest
 - **Logging:** CloudWatch
 - **Monitoring & Alerts:** Prometheus + Grafana (optional)
 
-### Deployment Checklist
-- [ ] All tests pass
-- [ ] Environment variables configured
-- [ ] Database migrations applied
-- [ ] Cache warmed (if needed)
-- [ ] Secrets rotated
-
 ## 🧪 Testing Strategy
 
 ### Unit Tests

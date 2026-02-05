@@ -348,13 +348,6 @@ git push origin feature/your-feature
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
 
-## 👨‍💻 Team
-
-**Team 09 - Kalvium** | January 2026
-
-- **Product Owner:** [TBD]
-- **Tech Lead:** [TBD]
-- **Developers:** [List team members]
 
 ## 📧 Support & Feedback
 

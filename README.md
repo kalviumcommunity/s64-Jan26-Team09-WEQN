@@ -323,13 +323,6 @@ npm run test:coverage    # Coverage report
 - **[Contributing Guide](./CONTRIBUTING.md)** – Code standards and PR process
 - **[Security Guide](./docs/SECURITY.md)** – Best practices and vulnerability reporting
 
-## 📊 Performance Metrics
-
-- **API Response Time:** < 200ms (p99)
-- **Queue Update Latency:** < 500ms (real-time)
-- **Database Queries:** Optimized with indexes (avg < 50ms)
-- **Cache Hit Rate:** > 80% (Redis)
-- **Uptime Target:** 99.9%
 
 ## 🤝 Contributing
 
@@ -347,10 +340,3 @@ git push origin feature/your-feature
 ## 📄 License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
-
-
-## 📧 Support & Feedback
-
-- **Issues:** [GitHub Issues](https://github.com/your-org/digital-queue-system/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/your-org/digital-queue-system/discussions)
-- **Email:** team09@kalvium.community

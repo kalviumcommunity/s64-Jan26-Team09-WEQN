@@ -1,112 +1,148 @@
-# 🏥 Digital Queue Management System for Hospitals
+<div align="center">
 
-A production-grade, cloud-native full-stack application that digitizes hospital queues in Tier-2 and Tier-3 cities. This system replaces physical waiting lines with a secure, role-based, real-time digital queue—deployable without expensive hardware or infrastructure.
+# 🏥 Digital Queue Management System
 
-**Key Value Proposition:** Reduce wait times, improve patient experience, and optimize doctor schedules using serverless cloud-native technology.
+### Transforming hospital waiting rooms into digital experiences
 
-## 📌 Problem Statement
+![Status](https://img.shields.io/badge/Status-In%20Development-yellow)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 
-Hospitals in Tier-2/3 cities still rely on manual queues, causing:
+**A cloud-native solution to digitize hospital queues in Tier-2 and Tier-3 cities**
 
-- **Long, unpredictable wait times** – Patients spend hours in physical queues
-- **Overcrowding** – Unsanitary conditions and safety risks
-- **Inefficient scheduling** – Doctors have no visibility into queue dynamics
-- **Poor patient experience** – No control or transparency during wait
+[View Demo](#) · [Report Bug](#) · [Request Feature](#)
 
-**Solution:** A lightweight, scalable, cost-effective digital queue system built on serverless and cloud-native technologies.
+</div>
 
-## 🎯 Project Objectives
+---
 
-- ✅ Digitize patient queues with real-time updates
-- ✅ Enable role-based dashboards for Admin, Doctor, and Patient
-- ✅ Reduce overcrowding through queue visibility and ETA prediction
-- ✅ Demonstrate a production-ready Next.js + Cloud architecture
-- ✅ Use serverless database + containerized deployment with auto-scaling
+## 🎯 Mission
 
-## 🧱 Tech Stack
+Replace chaotic physical waiting lines with a secure, real-time digital queue system that works without expensive hardware. Built for hospitals that need modern patient management on a budget.
 
-### Frontend & Backend
-- **Next.js** (App Router, SSR/ISR)
-- **TypeScript** – Type-safe codebase
-- **REST APIs** – Next.js API routes
+---
 
-### Database & ORM
-- **Neon** – Serverless PostgreSQL with auto-scaling, branching, and connection pooling
-- **Prisma ORM** – Type-safe database access
+## 🚨 The Challenge
 
-### Authentication & Security
-- **JWT** – Access & Refresh token-based auth
-- **bcrypt** – Secure password hashing
-- **Role-Based Access Control (RBAC)** – Admin, Doctor, Patient
-- **OWASP-compliant input sanitization**
-- **Secure HTTP headers** – CSP, HSTS, X-Frame-Options
+Hospitals in smaller cities face a daily crisis:
 
-### Caching
-- **Redis** – Queue status caching, reducing database load by 60%+
-- **Next.js ISR** – Static regeneration for patient dashboards
+| Problem | Impact |
+|---------|--------|
+| 🕐 **Unpredictable Wait Times** | Patients wait hours with no visibility into queue status |
+| 🏥 **Overcrowded Waiting Rooms** | Unsanitary conditions and safety risks during peak hours |
+| 📋 **Manual Queue Management** | Staff overwhelmed with paper tokens and crowd control |
+| 😤 **Poor Patient Experience** | No control, no transparency, no dignity in the process |
+| 📊 **Zero Data Insights** | Hospitals can't optimize schedules or predict demand |
 
-### Cloud & DevOps
-- **Docker & Docker Compose** – Containerized local development
-- **GitHub Actions** – CI/CD pipeline
-- **Amazon ECS (Fargate) / Azure App Service** – Serverless deployment
-- **AWS S3 / Azure Blob Storage** – File uploads via pre-signed URLs
-- **Secrets Manager / Azure Key Vault** – Secure credential management
+**The root cause?** Most digital queue systems require expensive kiosks, dedicated hardware, or complex on-premise infrastructure that smaller hospitals can't afford.
 
-### UI & UX
-- **Tailwind CSS** – Utility-first styling
-- **Responsive design** – Mobile-first approach
-- **Skeleton loaders & error states** – Enhanced UX
-- **Accessible components** – WCAG-compliant modals, toasts
+---
 
-### Testing & Quality
-- **Jest** – Unit testing
-- **React Testing Library** – Component testing
-- **Supertest** – API integration testing
-- **ESLint + Prettier** – Code quality & formatting
+## ✨ Our Solution
 
-## 👥 User Roles
+A **serverless, cloud-native queue system** that runs entirely in the browser and cloud—no hardware required.
 
-### 🧑‍⚕️ Admin
-- Manage doctors and hospital departments
-- Monitor real-time queue status across departments
-- View system-level insights and analytics
-- Generate reports and configure settings
+### What Makes This Different
 
-### 🩺 Doctor
-- View assigned queue with patient details
-- Call next patient with one click
-- Control consultation flow and duration
-- Access past consultation history
+- **Zero Hardware Cost** – Patients use their own phones, no kiosks needed
+- **Serverless Architecture** – Pay only for what you use, scales automatically
+- **Role-Based Access** – Separate dashboards for admins, doctors, and patients
+- **Real-Time Updates** – Live queue position tracking without page refresh
+- **Production-Ready** – Built with enterprise-grade security and scalability
 
-### 🧑‍🤝‍🧑 Patient
-- Join queue digitally without physical presence
-- View token number and live queue position
-- Receive real-time notifications (SMS/Email)
-- Cancel or reschedule appointment
+---
 
-## 🧩 Core Features
+## 🎯 Key Features
 
-- 🎟️ **Digital Token Generation** – Patients join queues with unique tokens
-- 📊 **Real-Time Queue Tracking** – Live position updates via WebSockets
-- ⏱️ **ETA Calculation** – ML-based predictions using consultation history
-- 🔐 **Secure Authentication** – JWT + role-based authorization
-- ⚡ **Redis Caching** – High-performance response times (avg <200ms)
-- 📁 **File Uploads** – Pre-signed URLs for secure document uploads
-- 📧 **Email/SMS Notifications** – Transactional alerts for patients
-- 🐳 **Cloud-Ready Deployment** – Docker + Kubernetes-ready architecture
-- 📈 **Scalability** – Handles 10K+ concurrent patients per hospital
+<table>
+<tr>
+<td width="50%">
+
+### For Patients 🧑‍🤝‍🧑
+- ✅ Join queue from anywhere via mobile
+- ✅ View live token number and position
+- ✅ Receive SMS/email notifications
+- ✅ Cancel or reschedule appointments
+- ✅ No app download required
+
+</td>
+<td width="50%">
+
+### For Doctors 🩺
+- ✅ View assigned queue in real-time
+- ✅ Call next patient with one click
+- ✅ Track consultation duration
+- ✅ Access patient history
+- ✅ Control queue flow
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### For Admins 🧑‍⚕️
+- ✅ Manage doctors and departments
+- ✅ Monitor all queues system-wide
+- ✅ Generate analytics reports
+- ✅ Configure hospital settings
+- ✅ View real-time dashboard
+
+</td>
+<td width="50%">
+
+### Technical Highlights ⚡
+- ✅ JWT-based authentication
+- ✅ Redis caching for speed
+- ✅ Serverless PostgreSQL (Neon)
+- ✅ Docker containerization
+- ✅ CI/CD with GitHub Actions
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔄 How It Works
+
+```mermaid
+graph LR
+    A[Patient Arrives] --> B[Scans QR Code]
+    B --> C[Joins Queue Online]
+    C --> D[Receives Token Number]
+    D --> E[Waits Remotely]
+    E --> F[Gets Notification]
+    F --> G[Arrives for Consultation]
+    G --> H[Doctor Calls Next]
+    H --> I[Consultation Complete]
+```
+
+### User Journey
+
+| Step | Patient | Doctor | System |
+|------|---------|--------|--------|
+| 1️⃣ | Scans QR code at hospital entrance | - | Generates unique token |
+| 2️⃣ | Joins queue via mobile browser | - | Adds to queue database |
+| 3️⃣ | Views live position (#12 → #8 → #3) | Views queue dashboard | Updates via Redis cache |
+| 4️⃣ | Receives "Your turn in 5 min" SMS | - | Sends notification |
+| 5️⃣ | Arrives at consultation room | Clicks "Call Next Patient" | Updates queue status |
+| 6️⃣ | Consultation begins | Marks consultation complete | Logs duration for ETA |
+
+---
 
 ## 🏗️ System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   Client (Browser/Mobile)                    │
+│              No App Download • Progressive Web App           │
 └────────────────────────┬────────────────────────────────────┘
                          │ HTTPS + JWT Auth
 ┌────────────────────────▼────────────────────────────────────┐
 │            Next.js Application (App Router)                  │
-│  ├─ UI Components (React + Tailwind)                         │
-│  ├─ API Routes (REST + WebSocket)                            │
+│  ├─ UI Components (React + Tailwind CSS)                     │
+│  ├─ API Routes (REST + WebSocket for real-time)              │
 │  └─ Middleware (Auth, RBAC, Rate Limiting)                   │
 └────────────────────────┬────────────────────────────────────┘
                          │
@@ -114,74 +150,136 @@ Hospitals in Tier-2/3 cities still rely on manual queues, causing:
         │                │                │
         ▼                ▼                ▼
    ┌────────┐    ┌──────────┐      ┌──────────┐
-   │ Neon   │    │  Redis   │      │   S3/    │
-   │ PG     │    │  Cache   │      │ Storage  │
+   │ Neon   │    │  Redis   │      │   AWS    │
+   │ PG     │    │  Cache   │      │   S3     │
+   │        │    │          │      │          │
    └────────┘    └──────────┘      └──────────┘
-        │
-        └── Prisma ORM (Type-Safe Migrations)
+   Serverless    Queue State       File Storage
+   PostgreSQL    (Target)           (Planned)
 
 ┌───────────────────────────────────────────────────────────────┐
-│  CI/CD: GitHub Actions → Docker Build → Registry              │
-│  Deployment: ECS (Fargate)                                    │
-│  Monitoring: CloudWatch                                       │
+│  Deployment: Docker → GitHub Actions → ECS (Fargate)          │
+│  Monitoring: CloudWatch (Planned)                             │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-## 📁 Project Structure
+---
 
-```
-s64-Jan26-Team09-WEQN/
-├── src/
-│   ├── app/
-│   │   ├── api/                    # REST API routes
-│   │   │   ├── auth/              # Login, signup, token refresh
-│   │   │   ├── queue/             # Queue operations
-│   │   │   └── admin/             # Admin endpoints
-│   │   ├── (auth)/                # Auth pages (login, signup)
-│   │   ├── dashboard/             # Role-based dashboards
-│   │   │   ├── patient/
-│   │   │   ├── doctor/
-│   │   │   └── admin/
-│   │   ├── layout.tsx             # Root layout
-│   │   └── page.tsx               # Home page
-│   ├── components/                # Reusable UI components
-│   │   ├── Queue/
-│   │   ├── Auth/
-│   │   ├── Dashboard/
-│   │   └── Common/
-│   ├── lib/
-│   │   ├── prisma.ts              # Prisma client singleton
-│   │   ├── auth.ts                # JWT utilities
-│   │   ├── redis.ts               # Redis client
-│   │   └── validators.ts          # Input validation
-│   ├── middleware.ts              # Auth & RBAC middleware
-│   └── types/                     # TypeScript interfaces
-├── prisma/
-│   ├── schema.prisma              # Database schema
-│   └── migrations/                # Version-controlled migrations
-├── public/                        # Static assets
-├── docker-compose.yml             # Local dev environment
-├── .env.example                   # Environment template
-├── .github/workflows/             # CI/CD pipelines
-├── jest.config.js                 # Testing configuration
-└── tsconfig.json                  # TypeScript configuration
-```
+## 🛠️ Technology Stack
 
-## 🛠️ Local Development Setup
+### Frontend & Backend
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| **Next.js 15** | Full-stack React framework with App Router | ✅ Planned |
+| **TypeScript** | Type-safe development | ✅ Planned |
+| **Tailwind CSS** | Utility-first styling | ✅ Planned |
+| **React** | UI component library | ✅ Planned |
+
+### Database & Caching
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| **Neon PostgreSQL** | Serverless database with auto-scaling | ✅ Planned |
+| **Prisma ORM** | Type-safe database access | ✅ Planned |
+| **Redis** | Queue state caching (target: <200ms response) | 🎯 Target |
+
+### Authentication & Security
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| **JWT** | Token-based authentication | ✅ Planned |
+| **bcrypt** | Password hashing | ✅ Planned |
+| **RBAC** | Role-based access control | ✅ Planned |
+
+### DevOps & Cloud
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| **Docker** | Containerization | ✅ Planned |
+| **GitHub Actions** | CI/CD pipeline | ✅ Planned |
+| **AWS ECS (Fargate)** | Serverless container deployment | 🎯 Target |
+| **AWS S3** | File storage with pre-signed URLs | 🔮 Future |
+
+### Testing
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| **Jest** | Unit testing | ✅ Planned |
+| **React Testing Library** | Component testing | ✅ Planned |
+| **Supertest** | API integration testing | ✅ Planned |
+
+**Legend:**  
+✅ Planned = Included in MVP roadmap  
+🎯 Target = Performance/optimization goal  
+🔮 Future = Post-MVP enhancement
+
+---
+
+## 📊 Current Status
+
+### ✅ Completed
+- [x] Project architecture design
+- [x] Technology stack selection
+- [x] README documentation
+
+### 🚧 In Progress
+- [ ] Database schema design (Prisma)
+- [ ] Authentication system (JWT + bcrypt)
+- [ ] Core queue management logic
+
+### 📋 Planned
+- [ ] Patient dashboard UI
+- [ ] Doctor dashboard UI
+- [ ] Admin dashboard UI
+- [ ] Real-time WebSocket integration
+- [ ] SMS/Email notification system
+- [ ] Redis caching layer
+- [ ] Docker containerization
+- [ ] CI/CD pipeline setup
+- [ ] Cloud deployment (AWS ECS)
+
+---
+
+## 🗺️ MVP Roadmap
+
+### Phase 1: Core Queue System (Weeks 1-2)
+- [ ] Set up Next.js project with TypeScript
+- [ ] Design and implement Prisma database schema
+- [ ] Build authentication system (JWT + bcrypt)
+- [ ] Create basic queue join/leave API endpoints
+- [ ] Implement role-based access control (RBAC)
+- [ ] Build patient queue view UI
+
+### Phase 2: Dashboards & Real-Time (Weeks 3-4)
+- [ ] Doctor dashboard with queue management
+- [ ] Admin dashboard with system overview
+- [ ] Real-time queue updates (WebSocket or polling)
+- [ ] ETA calculation based on average consultation time
+- [ ] Notification system (email/SMS integration)
+- [ ] Redis caching for queue state
+
+### Phase 3: Production Readiness (Weeks 5-6)
+- [ ] Docker containerization
+- [ ] GitHub Actions CI/CD pipeline
+- [ ] Deploy to AWS ECS (Fargate)
+- [ ] Security hardening (OWASP compliance)
+- [ ] Performance optimization (target: <200ms API response)
+- [ ] Unit and integration testing (80% coverage target)
+- [ ] Load testing (target: 10K concurrent users)
+- [ ] Documentation and deployment guide
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 18+** – [Download](https://nodejs.org)
-- **Docker & Docker Compose** – [Install](https://docs.docker.com/desktop)
-- **Git** – Version control
-- **Neon Account** – [Free serverless PostgreSQL](https://neon.tech)
-- **Redis** – Local instance or cloud (e.g., Redis Cloud)
+- Node.js 18+ ([Download](https://nodejs.org))
+- Docker & Docker Compose ([Install](https://docs.docker.com/desktop))
+- Git
+- Neon account ([Free tier](https://neon.tech))
 
-### Setup Steps
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/digital-queue-system.git
-cd digital-queue-system
+git clone https://github.com/your-org/s64-Jan26-Team09-WEQN.git
+cd s64-Jan26-Team09-WEQN
 
 # Install dependencies
 npm install
@@ -189,147 +287,119 @@ npm install
 # Copy environment template
 cp .env.example .env.local
 
+# Configure your .env.local with:
+# - DATABASE_URL (from Neon)
+# - JWT_SECRET (generate with: openssl rand -base64 32)
+# - REDIS_URL (local or cloud)
+
 # Start local services (PostgreSQL, Redis)
 docker compose up -d
 
 # Run database migrations
 npx prisma migrate dev
 
-# Seed database (optional)
+# Seed database with test data
 npx prisma db seed
 
 # Start development server
 npm run dev
 ```
 
-Visit `http://localhost:3000` and log in with test credentials.
+Visit `http://localhost:3000` to see the application.
 
-### Database Setup
+### Development Commands
+
 ```bash
-# View database in Prisma Studio
-npx prisma studio
-
-# Create a new migration
-npx prisma migrate dev --name <migration_name>
-
-# Reset database (dev only)
-npx prisma migrate reset
+npm run dev          # Start dev server
+npm run build        # Production build
+npm run test         # Run tests
+npm run lint         # Check code quality
+npx prisma studio    # Open database GUI
 ```
+
+---
 
 ## 🔐 Environment Variables
 
-Create a `.env.local` file based on `.env.example`:
+Create `.env.local` based on `.env.example`:
 
 ```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/queue_db
-DIRECT_DATABASE_URL=postgresql://user:password@localhost:5432/queue_db
+# Database (Neon)
+DATABASE_URL="postgresql://user:password@host/db?sslmode=require"
 
 # Authentication
-JWT_SECRET=your-super-secret-key-here-min-32-chars
-JWT_EXPIRY=7d
-REFRESH_TOKEN_EXPIRY=30d
+JWT_SECRET="your-secret-key-min-32-characters"
+JWT_EXPIRY="7d"
 
-# Redis
-REDIS_URL=redis://localhost:6379
+# Redis (Planned)
+REDIS_URL="redis://localhost:6379"
 
-# File Storage
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-aws-key
-AWS_SECRET_ACCESS_KEY=your-aws-secret
-S3_BUCKET_NAME=hospital-queue-uploads
-
-# Email Service (optional)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
+# Email/SMS (Future)
+SMTP_HOST="smtp.gmail.com"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASSWORD="your-app-password"
 
 # Application
-NEXT_PUBLIC_API_URL=http://localhost:3000
-NODE_ENV=development
+NEXT_PUBLIC_API_URL="http://localhost:3000"
+NODE_ENV="development"
 ```
 
-**⚠️ Security Note:** In production, use cloud secret managers (AWS Secrets Manager, Azure Key Vault) instead of `.env` files.
+**⚠️ Security:** Never commit `.env.local` to Git. Use cloud secret managers in production.
 
-## 🚀 Deployment Strategy
+---
 
-### Build Pipeline
-1. **Code Push** → GitHub Actions triggered
-2. **Tests** → Jest + Supertest run on every PR
-3. **Docker Build** → Image created and tagged with commit SHA
-4. **Registry Push** → Image pushed to ECR / Azure Container Registry
+## 🧪 Testing
 
-### Deployment Process
 ```bash
-# Development
-npm run dev              # Local Next.js dev server
+# Run all tests
+npm run test
 
-# Production Build
-npm run build            # Optimized Next.js build
-npm run start            # Production server
+# Watch mode
+npm run test:watch
 
-# Docker
-docker build -t app:latest .
-docker run -p 3000:3000 app:latest
+# Coverage report
+npm run test:coverage
 ```
 
-### Cloud Deployment
-- **Container Orchestration:** Amazon ECS (Fargate)
-- **Auto-Scaling:** Scale based on CPU/Memory
-- **Load Balancing:** Application Load Balancer with sticky sessions
-- **HTTPS:** AWS Certificate Manager
-- **Logging:** CloudWatch
-- **Monitoring & Alerts:** Prometheus + Grafana (optional)
+**Testing Strategy:**
+- **Unit Tests:** Core business logic (queue algorithms, auth utilities)
+- **Integration Tests:** API routes with mock database
+- **E2E Tests (Planned):** Full user workflows with Playwright
 
-## 🧪 Testing Strategy
+**Target:** 80% code coverage before production deployment
 
-### Unit Tests
-```bash
-npm run test              # Run all tests
-npm run test:watch       # Watch mode
-npm run test:coverage    # Coverage report
-```
-- Core business logic (queue algorithms, auth)
-- Utility functions and helpers
-
-### Integration Tests
-- API routes with mock database
-- Authentication flows
-- RBAC authorization
-
-### E2E Tests (Optional)
-- Playwright / Cypress for user workflows
-- Queue join → Call next → Consultation flow
-
-### CI/CD Pipeline
-- Tests must pass before merge
-- Coverage threshold: **80% minimum**
-- Automatic deployment on main branch
-
-## 📚 Documentation
-
-- **[API Documentation](./docs/API.md)** – OpenAPI/Swagger specifications
-- **[Architecture & Design](./docs/ARCHITECTURE.md)** – System design decisions
-- **[Database Schema](./docs/DATABASE.md)** – Prisma migrations and relationships
-- **[Deployment Guide](./docs/DEPLOYMENT.md)** – Step-by-step cloud deployment
-- **[Contributing Guide](./CONTRIBUTING.md)** – Code standards and PR process
-- **[Security Guide](./docs/SECURITY.md)** – Best practices and vulnerability reporting
-
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and submission process.
+We welcome contributions! Here's how to get started:
 
-### Quick Start for Contributors
-```bash
-git checkout -b feature/your-feature
-npm run test              # Run tests
-npm run lint              # Check code style
-git commit -m "feat: your feature"
-git push origin feature/your-feature
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests (`npm run test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+**Code Standards:**
+- TypeScript strict mode enabled
+- ESLint + Prettier for formatting
+- Conventional commits (`feat:`, `fix:`, `docs:`)
+- All tests must pass before merge
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for hospitals that deserve better**
+
+[⬆ Back to Top](#-digital-queue-management-system)
+
+</div>

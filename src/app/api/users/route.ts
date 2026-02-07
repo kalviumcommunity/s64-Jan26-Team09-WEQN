@@ -1,4 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import {
+  sendSuccess,
+  sendValidationError,
+  sendInternalError,
+  sendCreated,
+  calculatePagination,
+} from '@/lib/responseHandler';
+import { ERROR_CODES } from '@/lib/errorCodes';
 
 /**
  * GET /api/users
@@ -14,9 +22,9 @@ export async function GET(request: NextRequest) {
 
     // Validate pagination parameters
     if (page < 1 || limit < 1 || limit > 100) {
-      return NextResponse.json(
-        { error: 'Invalid pagination parameters. Page must be >= 1, limit must be 1-100' },
-        { status: 400 }
+      return sendValidationError(
+        'Invalid pagination parameters',
+        'Page must be >= 1, limit must be between 1-100'
       );
     }
 
@@ -49,31 +57,23 @@ export async function GET(request: NextRequest) {
 
     // Calculate pagination
     const total = filteredUsers.length;
-    const totalPages = Math.ceil(total / limit);
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: paginatedUsers,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      },
-      { status: 200 }
+    const pagination = calculatePagination(page, limit, total);
+
+    return sendSuccess(
+      paginatedUsers,
+      'Users fetched successfully',
+      200,
+      pagination
     );
   } catch (error) {
     console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return sendInternalError(
+      'Failed to fetch users',
+      error instanceof Error ? error.message : undefined
     );
   }
 }
@@ -89,30 +89,27 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!body.email || !body.password || !body.name || !body.role) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields',
-          required: ['email', 'password', 'name', 'role'],
-        },
-        { status: 400 }
+      return sendValidationError(
+        'Missing required fields',
+        'Required fields: email, password, name, role'
       );
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
+      return sendValidationError(
+        'Invalid email format',
+        'Please provide a valid email address'
       );
     }
 
     // Validate role
     const validRoles = ['PATIENT', 'DOCTOR', 'ADMIN'];
     if (!validRoles.includes(body.role)) {
-      return NextResponse.json(
-        { error: 'Invalid role', validRoles },
-        { status: 400 }
+      return sendValidationError(
+        'Invalid role',
+        `Role must be one of: ${validRoles.join(', ')}`
       );
     }
 
@@ -127,19 +124,21 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'User created successfully',
-        data: newUser,
-      },
-      { status: 201 }
-    );
+    return sendCreated(newUser, 'User created successfully');
   } catch (error) {
     console.error('Error creating user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    
+    // Handle JSON parse errors
+    if (error instanceof SyntaxError) {
+      return sendValidationError(
+        'Invalid JSON in request body',
+        error.message
+      );
+    }
+
+    return sendInternalError(
+      'Failed to create user',
+      error instanceof Error ? error.message : undefined
     );
   }
 }

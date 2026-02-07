@@ -1,4 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import {
+  sendSuccess,
+  sendValidationError,
+  sendCreated,
+  sendInternalError,
+  calculatePagination,
+} from '@/lib/responseHandler';
+import { ERROR_CODES } from '@/lib/errorCodes';
 
 /**
  * GET /api/tokens
@@ -15,9 +23,18 @@ export async function GET(request: NextRequest) {
 
     // Validate pagination
     if (page < 1 || limit < 1 || limit > 100) {
-      return NextResponse.json(
-        { error: 'Invalid pagination parameters' },
-        { status: 400 }
+      return sendValidationError(
+        'Invalid pagination parameters',
+        'Page must be >= 1, limit must be between 1-100'
+      );
+    }
+
+    // Validate status if provided
+    const validStatuses = ['WAITING', 'CALLED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+    if (status && !validStatuses.includes(status)) {
+      return sendValidationError(
+        'Invalid status parameter',
+        `Status must be one of: ${validStatuses.join(', ')}`
       );
     }
 
@@ -63,30 +80,22 @@ export async function GET(request: NextRequest) {
 
     // Pagination
     const total = filteredTokens.length;
-    const totalPages = Math.ceil(total / limit);
     const startIndex = (page - 1) * limit;
     const paginatedTokens = filteredTokens.slice(startIndex, startIndex + limit);
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: paginatedTokens,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
-      },
-      { status: 200 }
+    const pagination = calculatePagination(page, limit, total);
+
+    return sendSuccess(
+      paginatedTokens,
+      'Tokens fetched successfully',
+      200,
+      pagination
     );
   } catch (error) {
     console.error('Error fetching tokens:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return sendInternalError(
+      'Failed to fetch tokens',
+      error instanceof Error ? error.message : undefined
     );
   }
 }
@@ -102,21 +111,18 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!body.patientName || !body.patientPhone || !body.doctorId) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields',
-          required: ['patientName', 'patientPhone', 'doctorId'],
-        },
-        { status: 400 }
+      return sendValidationError(
+        'Missing required fields',
+        'Required fields: patientName, patientPhone, doctorId'
       );
     }
 
     // Validate phone format
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     if (!phoneRegex.test(body.patientPhone)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
+      return sendValidationError(
+        'Invalid phone number format',
+        'Phone number must be in E.164 format (e.g., +919876543210)'
       );
     }
 
@@ -134,19 +140,20 @@ export async function POST(request: NextRequest) {
       estimatedWaitMinutes: 45, // Mock ETA
     };
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Token created successfully. Patient added to queue.',
-        data: newToken,
-      },
-      { status: 201 }
-    );
+    return sendCreated(newToken, 'Token created successfully. Patient added to queue.');
   } catch (error) {
     console.error('Error creating token:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    
+    if (error instanceof SyntaxError) {
+      return sendValidationError(
+        'Invalid JSON in request body',
+        error.message
+      );
+    }
+
+    return sendInternalError(
+      'Failed to create token',
+      error instanceof Error ? error.message : undefined
     );
   }
 }

@@ -66,19 +66,9 @@ export interface Consultation {
   patient?: User;
 }
 
-// API Response types
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: ApiError;
-}
-
-export interface ApiError {
-  code: string;
-  message: string;
-  requestId?: string;
-  timestamp?: string;
-}
+// API Response types (imported from responseHandler)
+export type { ApiResponse, PaginationMeta } from '../lib/responseHandler';
+export type { ErrorCode } from '../lib/errorCodes';
 
 // Auth types
 export interface LoginCredentials {

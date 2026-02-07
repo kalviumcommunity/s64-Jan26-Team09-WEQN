@@ -2354,3 +2354,114 @@ useEffect(() => {
 - No server-side auth needed for pages
 - API routes still protected by middleware
 
+---
+
+## 🏗️ Component Architecture (Assignment 2.27)
+
+### Overview
+
+Modular, reusable component structure for consistent UI across all pages.
+
+**Component Hierarchy:**
+
+```
+components/
+├── layout/
+│   ├── Header.tsx           (Global navigation)
+│   ├── Sidebar.tsx          (Contextual navigation)
+│   └── LayoutWrapper.tsx    (Combines Header + Sidebar)
+└── ui/
+    ├── Button.tsx           (Reusable button)
+    └── Card.tsx             (Content container)
+```
+
+### Layout Components
+
+**Header** - [components/layout/Header.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/layout/Header.tsx)
+- Global navigation bar (Home, Dashboard, Users, Login)
+- Active state highlighting
+- Responsive with icons
+
+**Sidebar** - [components/layout/Sidebar.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/layout/Sidebar.tsx)
+- Grouped navigation (Main, Management, Settings)
+- Active route highlighting
+- Hierarchical structure
+
+**LayoutWrapper** - [components/layout/LayoutWrapper.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/layout/LayoutWrapper.tsx)
+- Combines Header + Sidebar
+- Optional sidebar visibility
+- Applied globally in `app/layout.tsx`
+
+### UI Components
+
+**Button** - [components/ui/Button.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/ui/Button.tsx)
+
+Props contract:
+```tsx
+interface ButtonProps {
+  label: string;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary' | 'danger' | 'success';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  fullWidth?: boolean;
+}
+```
+
+Variants: Primary (blue), Secondary (gray), Danger (red), Success (green)
+
+**Card** - [components/ui/Card.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/ui/Card.tsx)
+```tsx
+<Card title="User Info" footer={<Button label="Save" />}>
+  <p>Card content here</p>
+</Card>
+```
+
+### Barrel Exports
+
+**Simplified imports** via [components/index.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/index.ts):
+```tsx
+import { Header, Sidebar, Button, Card } from '@/components';
+```
+
+### Global Layout
+
+**app/layout.tsx:**
+```tsx
+import { LayoutWrapper } from '@/components';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <LayoutWrapper>{children}</LayoutWrapper>
+      </body>
+    </html>
+  );
+}
+```
+
+**Result:** All pages automatically have Header + Sidebar
+
+### Benefits
+
+**Reusability:**
+- Button used across all pages with consistent styling
+- Card component for uniform content sections
+- Header/Sidebar shared by all routes
+
+**Maintainability:**
+- Update Header once → changes everywhere
+- Props contracts prevent breaking changes
+- TypeScript interfaces catch errors early
+
+**Scalability:**
+- Add new UI components easily
+- Extend LayoutWrapper for custom layouts
+- Navigation links in one place (Sidebar)
+
+**Accessibility:**
+- Semantic HTML (`<header>`, `<aside>`, `<main>`)
+- Keyboard navigation (Link components)
+- Focus states on interactive elements
+

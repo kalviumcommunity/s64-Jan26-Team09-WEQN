@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import { LayoutWrapper } from '@/components';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Digital Queue Management System',
+  title: 'WEQN Hospital - Queue Management',
   description: 'A serverless, cloud-native queue management system for hospitals',
 };
 
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LayoutWrapper>{children}</LayoutWrapper>
+      </body>
     </html>
   );
 }

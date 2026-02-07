@@ -1,4 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import {
+  sendSuccess,
+  sendNotFoundError,
+  sendValidationError,
+  sendInternalError,
+  sendNoContent,
+} from '@/lib/responseHandler';
+import { ERROR_CODES } from '@/lib/errorCodes';
 
 /**
  * GET /api/users/[id]
@@ -24,24 +32,15 @@ export async function GET(
 
     // Simulate user not found
     if (id !== 'usr_001') {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return sendNotFoundError('User', `User with ID ${id} does not exist`);
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: mockUser,
-      },
-      { status: 200 }
-    );
+    return sendSuccess(mockUser, 'User fetched successfully');
   } catch (error) {
     console.error('Error fetching user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return sendInternalError(
+      'Failed to fetch user',
+      error instanceof Error ? error.message : undefined
     );
   }
 }
@@ -61,18 +60,15 @@ export async function PATCH(
 
     // Validate that at least one field is provided
     if (Object.keys(body).length === 0) {
-      return NextResponse.json(
-        { error: 'No fields provided for update' },
-        { status: 400 }
+      return sendValidationError(
+        'No fields provided for update',
+        'At least one field must be provided to update'
       );
     }
 
     // Simulate user not found
     if (id !== 'usr_001') {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return sendNotFoundError('User', `User with ID ${id} does not exist`);
     }
 
     // Mock updated user - Replace with actual database update
@@ -87,19 +83,20 @@ export async function PATCH(
       updatedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'User updated successfully',
-        data: updatedUser,
-      },
-      { status: 200 }
-    );
+    return sendSuccess(updatedUser, 'User updated successfully');
   } catch (error) {
     console.error('Error updating user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    
+    if (error instanceof SyntaxError) {
+      return sendValidationError(
+        'Invalid JSON in request body',
+        error.message
+      );
+    }
+
+    return sendInternalError(
+      'Failed to update user',
+      error instanceof Error ? error.message : undefined
     );
   }
 }
@@ -117,25 +114,16 @@ export async function DELETE(
 
     // Simulate user not found
     if (id !== 'usr_001') {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return sendNotFoundError('User', `User with ID ${id} does not exist`);
     }
 
     // Mock deletion - Replace with actual database soft delete
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'User deleted successfully',
-      },
-      { status: 200 }
-    );
+    return sendSuccess(undefined, 'User deleted successfully');
   } catch (error) {
     console.error('Error deleting user:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return sendInternalError(
+      'Failed to delete user',
+      error instanceof Error ? error.message : undefined
     );
   }
 }

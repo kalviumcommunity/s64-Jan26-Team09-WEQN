@@ -2118,3 +2118,164 @@ Adding new roles requires:
 - Add role to PROTECTED_ROUTES
 - No route handler changes needed ✅
 
+---
+
+## 🚨 Error Handling Middleware (Assignment 2.22)
+
+### Overview
+
+Centralized error handling with structured logging and production-safe responses.
+
+**Key Features:**
+- ✅ Structured JSON logging (info, warn, error, debug)
+- ✅ Environment-aware error messages
+- ✅ Stack traces hidden in production
+- ✅ Custom error types (Validation, Auth, NotFound, etc.)
+
+### Logger Utility
+
+**Location:** [src/lib/logger.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/lib/logger.ts)
+
+```typescript
+export const logger = {
+  info: (message: string, meta?: any) => {
+    console.log(JSON.stringify({ level: 'info', message, meta, timestamp: new Date() }));
+  },
+  error: (message: string, meta?: any) => {
+    console.error(JSON.stringify({ level: 'error', message, meta, timestamp: new Date() }));
+  },
+};
+
+// Usage
+logger.info('User logged in', { userId: '123' });
+logger.error('Database error', { error: err.message });
+```
+
+### Error Handler
+
+**Location:** [src/lib/errorHandler.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/lib/errorHandler.ts)
+
+```typescript
+export function handleError(error: any, context: string): NextResponse {
+  const isProd = process.env.NODE_ENV === 'production';
+  
+  const errorResponse = {
+    success: false,
+    message: isProd ? 'Something went wrong' : error.message,
+    stack: isProd ? undefined : error.stack,  // Hidden in prod
+  };
+  
+  // Always log full details (stack redacted in prod logs)
+  logger.error(`Error in ${context}`, {
+    message: error.message,
+    stack: isProd ? 'REDACTED' : error.stack,
+  });
+  
+  return NextResponse.json(errorResponse, { status: 500 });
+}
+```
+
+### Error Types
+
+```typescript
+export enum ErrorType {
+  VALIDATION = 'ValidationError',      // 400
+  AUTHENTICATION = 'AuthenticationError',  // 401
+  AUTHORIZATION = 'AuthorizationError',    // 403
+  NOT_FOUND = 'NotFoundError',         // 404
+  CONFLICT = 'ConflictError',          // 409
+  INTERNAL = 'InternalError',          // 500
+}
+
+// Helper functions
+createValidationError('Invalid email format');
+createNotFoundError('User');
+createConflictError('Email already exists');
+```
+
+### Usage in Routes
+
+```typescript
+export async function GET(request: NextRequest) {
+  try {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) throw createNotFoundError('User');
+    
+    return sendSuccess(user);
+  } catch (error) {
+    return handleError(error, 'GET /api/users/[id]');
+  }
+}
+```
+
+### Development vs Production
+
+**Development Response (NODE_ENV=development):**
+```bash
+curl http://localhost:3000/api/health?simulate=error
+```
+
+```json
+{
+  "success": false,
+  "message": "Simulated error for testing error handler",
+  "error": { "type": "InternalError", "code": "E500" },
+  "stack": "Error: Simulated error...\n    at GET (route.ts:18:13)"
+}
+```
+
+**Production Response (NODE_ENV=production):**
+```json
+{
+  "success": false,
+  "message": "Something went wrong. Please try again later.",
+  "error": { "type": "InternalError", "code": "E500" }
+}
+```
+
+**Console Log (Both Environments):**
+```json
+{
+  "level": "error",
+  "message": "Error in GET /api/health",
+  "meta": {
+    "message": "Simulated error for testing error handler",
+    "type": "InternalError",
+    "statusCode": 500,
+    "stack": "REDACTED"
+  },
+  "timestamp": "2026-02-07T06:47:23.456Z",
+  "environment": "production"
+}
+```
+
+### Benefits
+
+**Consistency:**
+- All errors follow same structure
+- Predictable frontend error handling
+- Easier debugging with structured logs
+
+**Security:**
+- Stack traces never exposed in production
+- Sensitive data redacted from logs
+- Generic user-facing messages
+
+**Observability:**
+- JSON-formatted logs for log aggregation (Splunk, CloudWatch)
+- Searchable by context, timestamp, error type
+- Correlation IDs can be added easily
+
+**Extensibility:**
+```typescript
+// Add custom error type
+export class DatabaseError extends AppError {
+  constructor(message: string) {
+    super(message, ErrorType.INTERNAL, 500, true);
+  }
+}
+
+// Use in routes
+throw new DatabaseError('Connection pool exhausted');
+```
+

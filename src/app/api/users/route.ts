@@ -87,39 +87,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.email || !body.password || !body.name || !body.role) {
-      return sendValidationError(
-        'Missing required fields',
-        'Required fields: email, password, name, role'
-      );
-    }
+    // Validate with Zod
+    const { createUserSchema } = await import('@/lib/validators/user');
+    const { ZodError } = await import('zod');
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      return sendValidationError(
-        'Invalid email format',
-        'Please provide a valid email address'
-      );
-    }
-
-    // Validate role
-    const validRoles = ['PATIENT', 'DOCTOR', 'ADMIN'];
-    if (!validRoles.includes(body.role)) {
-      return sendValidationError(
-        'Invalid role',
-        `Role must be one of: ${validRoles.join(', ')}`
-      );
-    }
+    const validatedData = createUserSchema.parse(body);
 
     // Mock user creation - Replace with actual database insert
     const newUser = {
       id: `usr_${Date.now()}`,
-      email: body.email,
-      name: body.name,
-      phone: body.phone || null,
-      role: body.role,
+      email: validatedData.email,
+      name: validatedData.name,
+      phone: validatedData.phone || null,
+      role: validatedData.role,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
@@ -127,7 +107,16 @@ export async function POST(request: NextRequest) {
     return sendCreated(newUser, 'User created successfully');
   } catch (error) {
     console.error('Error creating user:', error);
-    
+
+    // Handle Zod validation errors
+    const { ZodError } = await import('zod');
+    if (error instanceof ZodError) {
+      return sendValidationError(
+        'Validation failed',
+        error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+      );
+    }
+
     // Handle JSON parse errors
     if (error instanceof SyntaxError) {
       return sendValidationError(

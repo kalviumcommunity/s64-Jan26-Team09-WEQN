@@ -1668,3 +1668,260 @@ curl -X POST http://localhost:3000/api/users \
 - Enables API contract testing by exporting schema types
 - Improves security by rejecting unexpected payloads
 
+---
+
+## 🔐 Authentication APIs (Assignment 2.20)
+
+### Overview
+
+Secure user authentication system with **bcrypt** password hashing and **JWT** token-based sessions.
+
+**Security Features:**
+- ✅ Password hashing with bcrypt (10 salt rounds)
+- ✅ JWT tokens with 1-hour expiry
+- ✅ Token-based authentication middleware
+- ✅ Duplicate user prevention
+
+### Routes
+
+| Route | Method | Description | Auth Required |
+|-------|--------|-------------|---------------|
+| `/api/auth/signup` | POST | Register new user | No |
+| `/api/auth/login` | POST | Login and get JWT token | No |
+| `/api/auth/me` | GET | Get current user info | Yes |
+
+### Signup Implementation
+
+**Endpoint:** `POST /api/auth/signup`
+
+```typescript
+// src/app/api/auth/signup/route.ts
+import bcrypt from 'bcrypt';
+import { prisma } from '@/lib/db/prisma';
+
+export async function POST(request: NextRequest) {
+  const validatedData = createUserSchema.parse(body);
+  
+  // Check if user exists
+  const existingUser = await prisma.user.findUnique({
+    where: { email: validatedData.email },
+  });
+  
+  if (existingUser) {
+    return NextResponse.json({ error: 'User already exists' }, { status: 409 });
+  }
+  
+  // Hash password with 10 salt rounds
+  const passwordHash = await bcrypt.hash(validatedData.password, 10);
+  
+  // Create user
+  const newUser = await prisma.user.create({
+    data: { email, passwordHash, name, phone, role },
+  });
+  
+  return sendCreated(newUser, 'Signup successful');
+}
+```
+
+### Login Implementation
+
+**Endpoint:** `POST /api/auth/login`
+
+```typescript
+// src/app/api/auth/login/route.ts
+import bcrypt from 'bcrypt';
+import { generateToken } from '@/lib/auth/jwt';
+
+export async function POST(request: NextRequest) {
+  const { email, password } = await request.json();
+  
+  // Find user
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return sendNotFoundError('User');
+  
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isPasswordValid) {
+    return sendUnauthorizedError('Invalid credentials');
+  }
+  
+  // Generate JWT token (1h expiry)
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+  
+  return sendSuccess({ token, user }, 'Login successful');
+}
+```
+
+### JWT Utilities
+
+**Location:** `src/lib/auth/jwt.ts`
+
+```typescript
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET ||'your-secret-key';
+const JWT_EXPIRY = '1h';
+
+// Generate token
+export function generateToken(payload: JWTPayload): string {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+}
+
+// Verify token
+export function verifyToken(token: string): JWTPayload | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+  } catch {
+    return null;
+  }
+}
+```
+
+### Protected Route Middleware
+
+**Location:** `src/lib/auth/middleware.ts`
+
+```typescript
+import { authenticateRequest } from '@/lib/auth/jwt';
+
+export async function requireAuth(request: NextRequest) {
+  const user = authenticateRequest(request);
+  
+  if (!user) {
+    return {
+      error: sendUnauthorizedError('Authentication required'),
+    };
+  }
+  
+  return { user };
+}
+
+// Usage in protected routes
+export async function GET(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult.error) return authResult.error;
+  
+  const { user } = authResult;
+  // ... proceed with authenticated logic
+}
+```
+
+### Testing Authentication
+
+**1. Signup:**
+```bash
+curl -X POST http://localhost:3000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "password123",
+    "name": "Alice",
+    "role": "PATIENT"
+  }'
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Signup successful",
+  "data": {
+    "id": "usr_...",
+    "email": "alice@example.com",
+    "name": "Alice",
+    "role": "PATIENT"
+  }
+}
+```
+
+**2. Login:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "password123"
+  }'
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "usr_...",
+      "email": "alice@example.com",
+      "name": "Alice",
+      "role": "PATIENT"
+    }
+  }
+}
+```
+
+**3. Access Protected Route:**
+```bash
+curl -X GET http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>"
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "User authenticated successfully",
+  "data": {
+    "id": "usr_...",
+    "email": "alice@example.com",
+    "role": "PATIENT"
+  }
+}
+```
+
+**4. Unauthorized Access:**
+```bash
+curl -X GET http://localhost:3000/api/auth/me
+# No Authorization header
+```
+
+**Response (401):**
+```json
+{
+  "success": false,
+  "message": "Authentication required",
+  "error": {
+    "code": "E101",
+    "details": "Please provide a valid token in Authorization header"
+  }
+}
+```
+
+### Reflection
+
+**Security Best Practices:**
+
+- **Password Hashing:** Passwords are never stored in plain text. bcrypt with 10 salt rounds ensures even leaked databases remain secure
+- **Token Expiry:** 1-hour expiry limits the damage from stolen tokens. For production, implement refresh token rotation
+- **JWT Payload:** Only non-sensitive data (id, email, role) is encoded. Never include passwords or secrets
+- **Authorization Header:** Bearer token pattern is industry standard and works across all HTTP clients
+
+**Token Storage Considerations:**
+
+- **LocalStorage:** Simple but vulnerable to XSS attacks. Use only for low-stakes applications
+- **HttpOnly Cookies:** More secure, immune to XSS. Requires CSRF protection
+- **In-Memory (React State):** Safest for SPAs but requires re-login on refresh
+- **Production Recommendation:** HttpOnly cookies with SameSite=Strict and CSRF tokens
+
+**Future Enhancements:**
+- Refresh token rotation for longer sessions
+- Rate limiting on login attempts
+- Email verification after signup
+- Password reset flow
+- OAuth integration (Google, GitHub)
+

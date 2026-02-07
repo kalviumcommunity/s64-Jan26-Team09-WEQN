@@ -24,6 +24,7 @@ const PROTECTED_ROUTES = {
     '/api/users': ['ADMIN', 'DOCTOR', 'PATIENT'], // All authenticated users
     '/api/doctors': ['ADMIN', 'DOCTOR'],
     '/api/tokens': ['ADMIN', 'DOCTOR', 'PATIENT'],
+    '/api/uploads': ['ADMIN', 'DOCTOR', 'PATIENT'],
 };
 
 /**
@@ -133,5 +134,6 @@ export const config = {
         '/api/users/:path*',
         '/api/doctors/:path*',
         '/api/tokens/:path*',
+        '/api/uploads/:path*',
     ],
 };

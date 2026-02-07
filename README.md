@@ -1925,3 +1925,196 @@ curl -X GET http://localhost:3000/api/auth/me
 - Password reset flow
 - OAuth integration (Google, GitHub)
 
+---
+
+## 🛡️ Authorization Middleware (Assignment 2.21)
+
+### Overview
+
+Role-Based Access Control (RBAC) middleware that enforces least-privilege access across all API routes.
+
+**Key Features:**
+- ✅ JWT token verification at edge
+- ✅ Role-based route protection
+- ✅ Automatic 401/403 error responses
+- ✅ User context injection into requests
+
+### Middleware Architecture
+
+**Location:** [src/middleware.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/middleware.ts)
+
+```typescript
+// Protected routes and their allowed roles
+const PROTECTED_ROUTES = {
+  '/api/admin': ['ADMIN'],
+  '/api/users': ['ADMIN', 'DOCTOR', 'PATIENT'],
+  '/api/doctors': ['ADMIN', 'DOCTOR'],
+  '/api/tokens': ['ADMIN', 'DOCTOR', 'PATIENT'],
+};
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // 1. Skip public routes (signup, login)
+  if (PUBLIC_ROUTES.includes(pathname)) {
+    return NextResponse.next();
+  }
+  
+  // 2. Extract and verify JWT
+  const token = request.headers.get('authorization')?.split(' ')[1];
+  if (!token) return NextResponse.json({ error: 'Token missing' }, { status: 401 });
+  
+  const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+  
+  // 3. Check role authorization
+  const allowedRoles = PROTECTED_ROUTES[pathname];
+  if (!allowedRoles.includes(decoded.role)) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+  
+  // 4. Attach user context to headers
+  const headers = new Headers(request.headers);
+  headers.set('x-user-id', decoded.id);
+  headers.set('x-user-role', decoded.role);
+  
+  return NextResponse.next({ request: { headers } });
+}
+```
+
+### Protected Routes
+
+| Route | Allowed Roles | Status Code (Denied) |
+|-------|---------------|----------------------|
+| `/api/admin` | ADMIN | 403 Forbidden |
+| `/api/users` | ADMIN, DOCTOR, PATIENT | 401/403 |
+| `/api/doctors` | ADMIN, DOCTOR | 403 Forbidden |
+| `/api/tokens` | ADMIN, DOCTOR, PATIENT | 401/403 |
+
+### Admin Route Example
+
+**Location:** [src/app/api/admin/route.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/app/api/admin/route.ts)
+
+```typescript
+export async function GET(request: NextRequest) {
+  // User info injected by middleware
+  const userId = request.headers.get('x-user-id');
+  const userRole = request.headers.get('x-user-role');
+  
+  return sendSuccess({
+    message: 'Welcome to Admin Dashboard',
+    access: {
+      canManageUsers: true,
+      canManageDoctors: true,
+      canViewAllTokens: true,
+    },
+  });
+}
+```
+
+### Testing RBAC
+
+**1. Admin Access (Success):**
+```bash
+# Login as admin first
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"password"}'
+
+# Use admin token
+curl -X GET http://localhost:3000/api/admin \
+  -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Admin access granted",
+  "data": {
+    "message": "Welcome to the Admin Dashboard!",
+    "access": {
+      "canManageUsers": true,
+      "canManageDoctors": true,
+      "canViewAllTokens": true
+    }
+  }
+}
+```
+
+**2. Patient Access to Admin (Denied):**
+```bash
+# Login as patient
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"patient@example.com","password":"password"}'
+
+# Try to access admin route
+curl -X GET http://localhost:3000/api/admin \
+  -H "Authorization: Bearer <PATIENT_TOKEN>"
+```
+
+**Response (403 Forbidden):**
+```json
+{
+  "success": false,
+  "message": "Access denied",
+  "error": {
+    "code": "E102",
+    "details": "This endpoint requires one of the following roles: ADMIN"
+  }
+}
+```
+
+**3. No Token (Unauthorized):**
+```bash
+curl -X GET http://localhost:3000/api/admin
+```
+
+**Response (401 Unauthorized):**
+```json
+{
+  "success": false,
+  "message": "Authentication required",
+  "error": {
+    "code": "E101",
+    "details": "Please provide a valid token in Authorization header"
+  }
+}
+```
+
+### Reflection
+
+**Least Privilege Principle:**
+- Each role has minimum necessary access
+- ADMIN: Full access to all routes
+- DOCTOR: Access to doctors and tokens
+- PATIENT: Access to tokens only
+- Prevents privilege escalation attacks
+
+**Middleware Benefits:**
+- **Centralized Security:** All auth logic in one place
+- **DRY Principle:** No repeated auth code in routes
+- **Edge Execution:** Runs before route handlers (faster rejection)
+- **Type Safety:** TypeScript ensures role consistency
+
+**Token Validation Flow:**
+1. Middleware intercepts request
+2. Extracts JWT from Authorization header
+3. Verifies signature and expiry
+4. Checks user role against allowed roles
+5. Injects user context or returns error
+
+**Future Role Extensions:**
+```typescript
+const PROTECTED_ROUTES = {
+  '/api/admin': ['ADMIN'],
+  '/api/moderator': ['ADMIN', 'MODERATOR'], // New role
+  '/api/analytics': ['ADMIN', 'ANALYST'],   // New role
+};
+```
+
+Adding new roles requires:
+- Update Prisma schema enum
+- Add role to PROTECTED_ROUTES
+- No route handler changes needed ✅
+

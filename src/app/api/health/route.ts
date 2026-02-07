@@ -1,18 +1,39 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { handleError, createNotFoundError } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
+import { sendSuccess } from '@/lib/responseHandler';
 
 /**
- * Health Check Endpoint
  * GET /api/health
- * Returns the health status of the API
+ * Health check endpoint - demonstrates error handling in different scenarios
  */
-export async function GET() {
-  return NextResponse.json(
-    {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      service: 'Digital Queue Management System',
-      version: '1.0.0',
-    },
-    { status: 200 }
-  );
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const simulate = searchParams.get('simulate');
+
+    // Log health check
+    logger.info('Health check requested', { simulate });
+
+    // Simulate different error scenarios for testing
+    if (simulate === 'error') {
+      throw new Error('Simulated error for testing error handler');
+    }
+
+    if (simulate === 'notfound') {
+      throw createNotFoundError('Resource');
+    }
+
+    // Return healthy status
+    return sendSuccess(
+      {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+      },
+      'Service is running'
+    );
+  } catch (error) {
+    return handleError(error, 'GET /api/health');
+  }
 }

@@ -7,11 +7,20 @@ import {
   calculatePagination,
 } from '@/lib/responseHandler';
 import { ERROR_CODES } from '@/lib/errorCodes';
+import {
+  getCached,
+  setCached,
+  generateCacheKey,
+  invalidateCachePattern,
+} from '@/lib/utils/cache';
 
 /**
  * GET /api/users
  * Fetch all users with pagination
  * Query params: ?page=1&limit=10&role=PATIENT
+ * 
+ * Assignment 2.23: Caching Layer with Redis
+ * Cache strategy: Store user lists with 30-second TTL
  */
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +36,21 @@ export async function GET(request: NextRequest) {
         'Page must be >= 1, limit must be between 1-100'
       );
     }
+
+    // Generate cache key based on query parameters
+    const cacheKey = generateCacheKey('users', {
+      page,
+      limit,
+      role: role || undefined,
+    });
+
+    // ✅ Step 1: Check Redis cache first
+    const cachedResponse = await getCached(cacheKey);
+    if (cachedResponse) {
+      console.log(`✅ Cache HIT: ${cacheKey}`);
+      return sendSuccess(cachedResponse.data, cachedResponse.message, 200, cachedResponse.pagination);
+    }
+    console.log(`❌ Cache MISS: ${cacheKey}`);
 
     // Mock data - Replace with actual database query
     const mockUsers = [
@@ -63,6 +87,16 @@ export async function GET(request: NextRequest) {
 
     const pagination = calculatePagination(page, limit, total);
 
+    const responseData = {
+      data: paginatedUsers,
+      message: 'Users fetched successfully',
+      pagination,
+    };
+
+    // ✅ Step 2: Cache the response for 30 seconds
+    await setCached(cacheKey, responseData, 30);
+    console.log(`💾 Cached response for 30s: ${cacheKey}`);
+
     return sendSuccess(
       paginatedUsers,
       'Users fetched successfully',
@@ -82,6 +116,9 @@ export async function GET(request: NextRequest) {
  * POST /api/users
  * Create a new user
  * Body: { email, password, name, phone?, role }
+ * 
+ * Assignment 2.23: Cache Invalidation
+ * When a user is created, clear all user-related cache entries
  */
 export async function POST(request: NextRequest) {
   try {
@@ -103,6 +140,11 @@ export async function POST(request: NextRequest) {
       isActive: true,
       createdAt: new Date().toISOString(),
     };
+
+    // ✅ Step 3: Invalidate user cache after write operation
+    console.log('🔄 Invalidating user cache...');
+    await invalidateCachePattern('users:*');
+    console.log('✅ User cache cleared');
 
     return sendCreated(newUser, 'User created successfully');
   } catch (error) {

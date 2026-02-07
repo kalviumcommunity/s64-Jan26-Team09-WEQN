@@ -2279,3 +2279,78 @@ export class DatabaseError extends AppError {
 throw new DatabaseError('Connection pool exhausted');
 ```
 
+---
+
+## 🌐 Page Routing & Dynamic Routes (Assignment 2.26)
+
+### Overview
+
+Next.js App Router with public, protected, and dynamic routes.
+
+**Route Map:**
+
+| Route | Type | Auth Required | Description |
+|-------|------|---------------|-------------|
+| `/` | Public | No | Home page |
+| `/login` | Public | No | Login with API integration |
+| `/dashboard` | Protected | Yes | User dashboard |
+| `/users` | Protected | Yes | Users list |
+| `/users/[id]` | Dynamic + Protected | Yes | User profile (any ID) |
+| `/not-found` | Error | No | Custom 404 page |
+
+### Public vs Protected Routes
+
+**Public (no auth):**
+- `/` - Home page with navigation
+- `/login` - Login form with real API call
+
+**Protected (localStorage token check):**
+- `/dashboard` - Redirects to /login if no token
+- `/users` - Users list page
+- `/users/[id]` - Dynamic user profiles
+
+### Dynamic Routing
+
+**Pattern:** `/users/[id]/page.tsx`
+
+```tsx
+interface Props {
+  params: { id: string };
+}
+
+export default function UserProfile({ params }: Props) {
+  const { id } = params;  // Dynamic parameter
+  // Render user based on ID
+}
+```
+
+**URLs:**
+- `/users/1` → Shows User #1
+- `/users/2` → Shows User #2
+- `/users/abc` → Shows User #abc (any value)
+
+### Breadcrumbs
+
+```tsx
+<nav>
+  <Link href="/">Home</Link> > 
+  <Link href="/users">Users</Link> > 
+  <span>User #{id}</span>
+</nav>
+```
+
+### Client-Side Auth
+
+```tsx
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) router.push('/login');
+}, []);
+```
+
+**Benefits:**
+- Fast client-side redirects
+- Works with localStorage tokens
+- No server-side auth needed for pages
+- API routes still protected by middleware
+

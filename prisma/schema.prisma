@@ -27,6 +27,7 @@ model User {
   doctor       Doctor?
   tokens       Token[]
   consultations Consultation[]
+  documents     Document[]
 
   @@index([email]) // Optimize login queries
   @@map("users")
@@ -97,6 +98,22 @@ model Consultation {
 
   @@index([doctorId, endTime])
   @@map("consultations")
+}
+
+// Document model - File uploads
+model Document {
+  id        String   @id @default(uuid())
+  url       String
+  filename  String
+  mimeType  String
+  size      Int
+  uploadedAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("documents")
 }
 
 // Enums

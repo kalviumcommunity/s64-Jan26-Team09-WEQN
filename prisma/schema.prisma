@@ -1,0 +1,111 @@
+// Prisma Schema for Digital Queue Management System
+// Database: Neon PostgreSQL (Serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// User model - Supports Patient, Doctor, and Admin roles
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(PATIENT)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  doctor       Doctor?
+  tokens       Token[]
+  consultations Consultation[]
+
+  @@map("users")
+}
+
+// Doctor model - Extended profile for doctors
+model Doctor {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  department              String
+  specialization          String?
+  roomNumber              String?
+  avgConsultationMinutes  Int      @default(10)
+  isAvailable             Boolean  @default(true)
+  createdAt               DateTime @default(now())
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokens        Token[]
+  consultations Consultation[]
+
+  @@map("doctors")
+}
+
+// Token model - Queue entries
+model Token {
+  id                    String      @id @default(uuid())
+  tokenNumber           String      @unique
+  patientId             String?
+  patientName           String
+  patientPhone          String
+  doctorId              String
+  status                TokenStatus @default(WAITING)
+  position              Int?
+  joinedAt              DateTime    @default(now())
+  calledAt              DateTime?
+  completedAt           DateTime?
+  estimatedWaitMinutes  Int?
+
+  // Relations
+  patient       User?         @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  doctor        Doctor        @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  consultation  Consultation?
+
+  @@index([doctorId, status, joinedAt])
+  @@index([patientId, status])
+  @@map("tokens")
+}
+
+// Consultation model - Track consultation history
+model Consultation {
+  id              String    @id @default(uuid())
+  tokenId         String    @unique
+  doctorId        String
+  patientId       String?
+  startTime       DateTime  @default(now())
+  endTime         DateTime?
+  durationMinutes Int?
+  notes           String?
+
+  // Relations
+  token   Token   @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient User?   @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([doctorId, endTime])
+  @@map("consultations")
+}
+
+// Enums
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum TokenStatus {
+  WAITING
+  CALLED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

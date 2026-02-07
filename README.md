@@ -370,6 +370,18 @@ npm run test:coverage
 
 ---
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` folder:
+
+- **[High-Level Design (HLD)](./docs/HLD.md)** – System architecture and design decisions
+- **[Low-Level Design (LLD)](./docs/LLD.md)** – Implementation details and API specifications
+- **[API Documentation](./docs/API.md)** – Complete API reference
+- **[Deployment Guide](./docs/DEPLOYMENT.md)** – Step-by-step deployment instructions
+- **[Project Structure](./docs/PROJECT_STRUCTURE.md)** – Folder organization and conventions
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:

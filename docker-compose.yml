@@ -1,38 +1,34 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nextjs_app
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - NODE_ENV=development
-    env_file:
-      - .env.local
-    depends_on:
-      - redis
-    networks:
-      - app-network
+  # PostgreSQL Database (for local development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: queue-postgres
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: queueuser
+      POSTGRES_PASSWORD: queuepass
+      POSTGRES_DB: queuedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U queueuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Redis Cache (for local development - planned feature)
   redis:
     image: redis:7-alpine
-    container_name: redis_dev
+    container_name: queue-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - app-network
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -40,8 +36,5 @@ services:
       retries: 5
 
 volumes:
+  postgres_data:
   redis_data:
-
-networks:
-  app-network:
-    driver: bridge

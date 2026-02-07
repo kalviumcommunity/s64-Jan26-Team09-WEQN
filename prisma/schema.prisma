@@ -28,6 +28,7 @@ model User {
   tokens       Token[]
   consultations Consultation[]
 
+  @@index([email]) // Optimize login queries
   @@map("users")
 }
 
@@ -47,6 +48,8 @@ model Doctor {
   tokens        Token[]
   consultations Consultation[]
 
+  @@index([department])   // Filter by department
+  @@index([isAvailable])  // Find available doctors
   @@map("doctors")
 }
 
@@ -72,6 +75,7 @@ model Token {
 
   @@index([doctorId, status, joinedAt])
   @@index([patientId, status])
+  @@index([status, joinedAt])  // Global queue queries
   @@map("tokens")
 }
 

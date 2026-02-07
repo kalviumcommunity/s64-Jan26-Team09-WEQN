@@ -219,7 +219,317 @@ graph LR
 - [x] README documentation
 
 ### 🚧 In Progress
-- [ ] Database schema design (Prisma)
+- [ ] Build API routes using Prisma queries
+- [ ] Add database migrations for schema evolutions
+
+---
+
+## 🔄 Database Migrations & Seed Scripts (Assignment 2.15)
+
+### Overview
+
+Database migrations and seed scripts ensure consistent database structure and reproducible test data across all environments. Migrations version-control schema changes, while seed scripts provide initial data for development and testing.
+
+### Migration Workflow
+
+#### Creating Migrations
+
+When you modify the Prisma schema, create a migration to apply those changes to the database:
+
+```bash
+# Create and apply migration
+npx prisma migrate dev --name descriptive_name
+
+# Example: Initial schema
+npx prisma migrate dev --name init_schema
+```
+
+**What happens:**
+1. Prisma generates SQL migration files in `prisma/migrations/`
+2. Applies the migration to your PostgreSQL database
+3. Updates the Prisma client with new schema changes
+
+#### Migration Files Structure
+
+```
+prisma/migrations/
+└── 20260207055244_init_schema/
+    └── migration.sql
+```
+
+Each migration gets a timestamp and descriptive name, making it easy to track changes chronologically.
+
+#### Viewing Migration Status
+
+```bash
+# Check which migrations have been applied
+npx prisma migrate status
+```
+
+#### Rolling Back Migrations
+
+> [!WARNING]
+> **Destructive Operation**: Migration reset deletes ALL data and recreates the database.
+
+```bash
+# Reset database, re-apply all migrations, and run seed
+npx prisma migrate reset
+```
+
+This command:
+- Drops the database
+- Creates a new database
+- Applies all migrations in order
+- Runs the seed script automatically
+
+**Use cases:**
+- Fixing broken migration state
+- Starting fresh in development
+- Testing migration sequence
+
+---
+
+### Seed Script
+
+The seed script (`prisma/seed.ts`) populates the database with realistic test data for development.
+
+#### Running the Seed
+
+```bash
+# Run seed script
+npx prisma db seed
+```
+
+#### Seed Data Overview
+
+Our seed script creates a complete hospital scenario:
+
+**Users (6 total):**
+- 1 Admin: `admin@hospital.com`
+- 2 Doctors: `dr.sharma@hospital.com`, `dr.patel@hospital.com`
+- 3 Patients: `patient1@example.com`, `patient2@example.com`, `patient3@example.com`
+
+All passwords are hashed with bcrypt. Test password: `password123`
+
+**Doctor Profiles (2):**
+| Doctor | Department | Specialization | Room |
+|--------|-----------|---------------|------|
+| Dr. Rajesh Sharma | Cardiology | Heart Surgery | C-101 |
+| Dr. Priya Patel | Pediatrics | Child Health | P-205 |
+
+**Queue Tokens (5):**
+| Token | Patient | Doctor | Status |
+|-------|---------|--------|--------|
+| C-001 | Amit Kumar | Dr. Sharma | COMPLETED |
+| P-001 | Priya Singh | Dr. Patel | COMPLETED |
+| C-002 | Rahul Verma | Dr. Sharma | IN_PROGRESS |
+| C-003 | Walk-in Patient 1 | Dr. Sharma | WAITING |
+| P-002 | Walk-in Patient 2 | Dr. Patel | WAITING |
+
+**Consultations (2):**
+- Completed consultation for C-001 with notes
+- Completed consultation for P-001 with notes
+
+#### Idempotency
+
+The seed script is **idempotent** — running it multiple times produces the same result:
+
+```typescript
+// Clears existing data before seeding
+await prisma.consultation.deleteMany();
+await prisma.token.deleteMany();
+await prisma.doctor.deleteMany();
+await prisma.user.deleteMany();
+```
+
+**Benefits:**
+- Re-running seed doesn't create duplicates
+- Safe to reset data to known state
+- Consistent testing environment
+
+---
+
+### Verification Steps
+
+#### Using Prisma Studio
+
+Open the database GUI to visually verify seed data:
+
+```bash
+npx prisma studio
+```
+
+**What to check:**
+1. Navigate to `http://localhost:5555`
+2. Click "User" table → Should see 6 records
+3. Click "Doctor" table → Should see 2 records
+4. Click "Token" table → Should see 5 records with various statuses
+5. Click "Consultation" table → Should see 2 completed consultations
+
+####Terminal Verification
+
+Seed script outputs summary:
+
+```
+🌱 Starting database seed...
+🗑️  Cleared existing data
+✅ Created 6 users (1 admin, 2 doctors, 3 patients)
+✅ Created 2 doctor profiles
+✅ Created 5 tokens
+✅ Created 2 consultations
+
+📊 Database seeded successfully!
+   - Users: 6
+   - Doctors: 2
+   - Tokens: 5
+   - Consultations: 2
+```
+
+---
+
+### Production Safety Practices
+
+#### Backup Strategy
+
+> [!CAUTION]
+> **Never run `prisma migrate reset` in production!** This will delete all data.
+
+**Before running migrations in production:**
+1. **Backup database:**
+   ```bash
+   pg_dump $DATABASE_URL > backup_$(date +%Y%m%d).sql
+   ```
+
+2. **Test migration in staging:**
+   - Apply migration to staging environment first
+   - Verify application works correctly
+   - Check for data integrity issues
+
+3. **Plan rollback strategy:**
+   - Know how to rollback if migration fails
+   - Have downtime window planned
+   - Communicate with stakeholders
+
+#### Migration Best Practices
+
+**Do:**
+- ✅ Test migrations locally first
+- ✅ Review generated SQL before applying
+- ✅ Use descriptive migration names
+- ✅ Commit migration files to Git
+- ✅ Apply migrations during low-traffic hours
+
+**Don't:**
+- ❌ Manually edit migration files after they're applied
+- ❌ Delete migration files
+- ❌ Run migrations without backups
+- ❌ Skip testing in staging environment
+
+#### Staging Environment Workflow
+
+```bash
+# 1. Local development
+npx prisma migrate dev --name add_feature
+
+# 2. Commit migration files
+git add prisma/migrations
+git commit -m "feat: add new feature migration"
+
+# 3. Deploy to staging
+# (CI/CD runs: npx prisma migrate deploy)
+
+# 4. Test in staging
+# Verify feature works, no data issues
+
+# 5. Deploy to production
+# (CI/CD runs: npx prisma migrate deploy)
+```
+
+#### Seed Script in Production
+
+> [!IMPORTANT]
+> **Seed scripts are for development/testing only.** Never run seed in production as it deletes all data!
+
+**Production data should come from:**
+- User registrations
+- Admin interfaces  
+- Data import tools
+- Backups/migrations from staging
+
+---
+
+### Reflection
+
+Implementing database migrations and seed scripts has significantly improved our development workflow:
+
+**Benefits Realized:**
+
+1. **Version-Controlled Schema**
+   - All database changes are tracked in Git
+   - Easy to see what changed and when
+   - Team members can sync schema changes easily
+
+2. **Reproducible Development Environment**
+   - New developers can set up database instantly
+   - Consistent test data across team
+   - No manual SQL execution needed
+
+3. **Safe Schema Evolution**
+   - Migrations provide rollback capability
+   - SQL generation reduces human error
+   - Clear audit trail of database changes
+
+4. **Testing Confidence**
+   - Seed data covers realistic scenarios
+   - Idempotent seeds allow repeated testing
+   - Known state makes bugs reproducible
+
+5. **Production Readiness**
+   - Practiced migration workflow
+   - Backup strategies in place
+   - Staging testing prevents production issues
+
+**Challenges Overcome:**
+
+- **Data Relationships**: Ensuring seed data maintains proper foreign key relationships required careful ordering (users → doctors → tokens → consultations)
+- **Idempotency**: Implementing delete-first strategy prevents duplicate data issues
+- **Realistic Data**: Creating meaningful test scenarios helps catch real-world bugs
+
+---
+
+### Useful Commands Reference
+
+```bash
+# Migration commands
+npx prisma migrate dev --name migration_name    # Create and apply migration
+npx prisma migrate deploy                       # Apply pending migrations (CI/CD)
+npx prisma migrate status                       # Check migration status
+npx prisma migrate reset                        # ⚠️  Reset database (dev only)
+
+# Seed commands
+npx prisma db seed                              # Run seed script
+npx prisma db push                              # Sync schema without migration
+
+# Utilities
+npx prisma studio                               # Open database GUI
+npx prisma format                               # Format schema file
+npx prisma validate                             # Validate schema
+```
+
+---
+
+### Next Steps
+
+- [x] Create initial migration
+- [x] Implement seed script with realistic data
+- [x] Configure package.json for seeding
+- [x] Verify data in Prisma Studio
+- [x] Document migration workflow and safety practices
+- [ ] Add more seed scenarios (edge cases, different departments)
+- [ ] Create migration for schema updates
+- [ ] Set up staging environment for migration testing
+
+### 🚧 In Progress
 - [ ] Authentication system (JWT + bcrypt)
 - [ ] Core queue management logic
 

@@ -25,6 +25,7 @@ const PROTECTED_ROUTES = {
     '/api/doctors': ['ADMIN', 'DOCTOR'],
     '/api/tokens': ['ADMIN', 'DOCTOR', 'PATIENT'],
     '/api/email': ['ADMIN', 'DOCTOR', 'PATIENT'],
+    '/api/uploads': ['ADMIN', 'DOCTOR', 'PATIENT'],
 };
 
 /**
@@ -135,5 +136,6 @@ export const config = {
         '/api/doctors/:path*',
         '/api/tokens/:path*',
         '/api/email/:path*',
+        '/api/uploads/:path*',
     ],
 };

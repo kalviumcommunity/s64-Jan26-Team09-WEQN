@@ -912,7 +912,143 @@ npm run test:db
 - [x] Schema defined with all models
 - [x] Prisma Client generated successfully
 - [x] Database connection verified
-- [ ] Create seed data for development
-- [ ] Build API routes using Prisma queries
-- [ ] Add database migrations for schema evolutions
+- [x] Create seed data for development
+- [x] Build API routes using Prisma queries
+- [x] Add database migrations for schema evolutions
+
+---
+
+## 🛡️ Input Validation with Zod (Assignment 2.19)
+
+### Overview
+
+All API endpoints now use **Zod** for runtime input validation, ensuring type-safe and reliable data before it reaches the database.
+
+**Why Zod?**
+- ✅ TypeScript-first schema validation
+- ✅ Automatic type inference
+- ✅ Detailed error messages
+- ✅ Reusable schemas across client and server
+
+### Validation Schemas
+
+Located in `src/lib/validators/`:
+
+**User Schema** (`user.ts`):
+```typescript
+import { z } from 'zod';
+
+export const createUserSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().regex(/^\+?[1-9]\d{9,14}$/).optional(),
+  role: z.enum(['PATIENT', 'DOCTOR', 'ADMIN']).default('PATIENT'),
+});
+
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+```
+
+**Doctor Schema** (`doctor.ts`):
+```typescript
+export const createDoctorSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+  department: z.string().min(2, 'Department is required'),
+  specialization: z.string().optional(),
+  avgConsultationMinutes: z.number().int().positive().default(10),
+  isAvailable: z.boolean().default(true),
+});
+```
+
+**Token Schema** (`token.ts`):
+```typescript
+export const createTokenSchema = z.object({
+  patientName: z.string().min(2, 'Patient name is required'),
+  patientPhone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone format'),
+  doctorId: z.string().uuid('Invalid doctor ID'),
+});
+```
+
+### API Integration
+
+Zod validation is integrated into all POST endpoints:
+
+```typescript
+// Example: POST /api/users
+import { createUserSchema } from '@/lib/validators/user';
+import { ZodError } from 'zod';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validatedData = createUserSchema.parse(body); // 🛡️ Validation happens here
+    
+    // Create user with validated data
+    return sendCreated(newUser);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return sendValidationError('Validation failed', ...);
+    }
+  }
+}
+```
+
+### Testing Validation
+
+**✅ Valid Request:**
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "patient@example.com",
+    "password": "password123",
+    "name": "John Doe",
+    "role": "PATIENT"
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User created successfully",
+  "data": { "id": "usr_...", "email": "patient@example.com", ... }
+}
+```
+
+**❌ Invalid Request:**
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "invalid-email",
+    "password": "short",
+    "name": "A"
+  }'
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": "email: Invalid email address, password: Password must be at least 8 characters, name: Name must be at least 2 characters"
+}
+```
+
+### Reflection
+
+**Benefits of Zod validation:**
+
+- **Type Safety**: Automatic TypeScript type inference from schemas eliminates type mismatches
+- **Early Failure**: Invalid data is caught at the API boundary before reaching business logic or database
+- **Consistent Errors**: All validation errors follow the same structure, making frontend integration predictable
+- **Schema Reuse**: Same validation schemas can be used in both frontend forms and backend APIs
+- **Self-Documenting**: Schemas serve as live documentation of expected request formats
+
+**Production Impact:**
+- Prevents database corruption from malformed data
+- Reduces debugging time with clear, actionable error messages
+- Enables API contract testing by exporting schema types
+- Improves security by rejecting unexpected payloads
 

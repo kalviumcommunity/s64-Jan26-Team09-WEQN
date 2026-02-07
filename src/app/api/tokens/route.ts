@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     let filteredTokens = mockTokens;
-    
+
     if (doctorId) {
       filteredTokens = filteredTokens.filter((token) => token.doctorId === doctorId);
     }
-    
+
     if (status) {
       filteredTokens = filteredTokens.filter((token) => token.status === status);
     }
@@ -109,31 +109,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.patientName || !body.patientPhone || !body.doctorId) {
-      return sendValidationError(
-        'Missing required fields',
-        'Required fields: patientName, patientPhone, doctorId'
-      );
-    }
+    // Validate with Zod
+    const { createTokenSchema } = await import('@/lib/validators/token');
+    const { ZodError } = await import('zod');
 
-    // Validate phone format
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(body.patientPhone)) {
-      return sendValidationError(
-        'Invalid phone number format',
-        'Phone number must be in E.164 format (e.g., +919876543210)'
-      );
-    }
+    const validatedData = createTokenSchema.parse(body);
 
     // Mock token creation
     const newToken = {
       id: `tok_${Date.now()}`,
       tokenNumber: `DOC-T${String(Date.now()).slice(-3)}`,
-      patientId: body.patientId || null,
-      patientName: body.patientName,
-      patientPhone: body.patientPhone,
-      doctorId: body.doctorId,
+      patientId: validatedData.patientId || null,
+      patientName: validatedData.patientName,
+      patientPhone: validatedData.patientPhone,
+      doctorId: validatedData.doctorId,
       status: 'WAITING',
       position: 3, // Mock position
       joinedAt: new Date().toISOString(),
@@ -143,7 +132,16 @@ export async function POST(request: NextRequest) {
     return sendCreated(newToken, 'Token created successfully. Patient added to queue.');
   } catch (error) {
     console.error('Error creating token:', error);
-    
+
+    // Handle Zod validation errors
+    const { ZodError } = await import('zod');
+    if (error instanceof ZodError) {
+      return sendValidationError(
+        'Validation failed',
+        error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
+      );
+    }
+
     if (error instanceof SyntaxError) {
       return sendValidationError(
         'Invalid JSON in request body',

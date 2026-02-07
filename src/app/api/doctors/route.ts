@@ -57,13 +57,13 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     let filteredDoctors = mockDoctors;
-    
+
     if (department) {
       filteredDoctors = filteredDoctors.filter(
         (doc) => doc.department.toLowerCase() === department.toLowerCase()
       );
     }
-    
+
     if (available !== null) {
       const isAvailable = available === 'true';
       filteredDoctors = filteredDoctors.filter(
@@ -110,26 +110,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.userId || !body.department) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields',
-          required: ['userId', 'department'],
-        },
-        { status: 400 }
-      );
-    }
+    // Validate with Zod
+    const { createDoctorSchema } = await import('@/lib/validators/doctor');
+    const { ZodError } = await import('zod');
+
+    const validatedData = createDoctorSchema.parse(body);
 
     // Mock doctor creation
     const newDoctor = {
       id: `doc_${Date.now()}`,
-      userId: body.userId,
-      department: body.department,
-      specialization: body.specialization || null,
-      roomNumber: body.roomNumber || null,
-      avgConsultationMinutes: body.avgConsultationMinutes || 10,
-      isAvailable: true,
+      userId: validatedData.userId,
+      department: validatedData.department,
+      specialization: validatedData.specialization || null,
+      roomNumber: validatedData.roomNumber || null,
+      avgConsultationMinutes: validatedData.avgConsultationMinutes,
+      isAvailable: validatedData.isAvailable,
       createdAt: new Date().toISOString(),
     };
 
@@ -143,6 +138,23 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Error creating doctor:', error);
+
+    // Handle Zod validation errors
+    const { ZodError } = await import('zod');
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation failed',
+          errors: error.errors.map((e) => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

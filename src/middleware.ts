@@ -21,9 +21,10 @@ interface JWTPayload {
  */
 const PROTECTED_ROUTES = {
     '/api/admin': ['ADMIN'],
-    '/api/users': ['ADMIN', 'DOCTOR', 'PATIENT'], // All authenticated users
+    '/api/users': ['ADMIN', 'DOCTOR', 'PATIENT'],
     '/api/doctors': ['ADMIN', 'DOCTOR'],
     '/api/tokens': ['ADMIN', 'DOCTOR', 'PATIENT'],
+    '/api/email': ['ADMIN', 'DOCTOR', 'PATIENT'],
 };
 
 /**
@@ -133,5 +134,6 @@ export const config = {
         '/api/users/:path*',
         '/api/doctors/:path*',
         '/api/tokens/:path*',
+        '/api/email/:path*',
     ],
 };

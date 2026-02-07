@@ -415,3 +415,194 @@ This project is licensed under the MIT License. See [LICENSE](./LICENSE) for det
 [⬆ Back to Top](#-digital-queue-management-system)
 
 </div>
+
+---
+
+## 📦 Prisma ORM Setup (Assignment 2.14)
+
+### Overview
+
+Prisma ORM serves as the type-safe database layer for this application, providing:
+- **Type Safety**: Auto-generated TypeScript types from schema
+- **Query Reliability**: Compile-time query validation
+- **Developer Productivity**: IntelliSense, auto-completion, and error prevention
+
+### Setup Steps Completed
+
+#### 1. Installation
+Prisma was installed as a dev dependency along with Prisma Client:
+```bash
+npm install prisma --save-dev
+npm install @prisma/client
+```
+
+#### 2. Schema Definition
+The database schema is defined in `prisma/schema.prisma` with the following models:
+- **User** - Supports Patient, Doctor, and Admin roles
+- **Doctor** - Extended profile for doctors with specialization
+- **Token** - Queue entries with status tracking
+- **Consultation** - Historical record of consultations
+
+View the complete schema: [prisma/schema.prisma](./prisma/schema.prisma)
+
+#### 3. Client Generation
+Generated the Prisma Client with type-safe database access:
+```bash
+npm run prisma:generate
+```
+
+**Output:**
+```
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client
+```
+
+#### 4. Connection Setup
+Created a singleton Prisma client instance in `src/lib/db/prisma.ts`:
+- Prevents multiple instances during development hot-reloading
+- Environment-based logging (verbose in dev, errors only in prod)
+- Graceful disconnection on process termination
+
+View the implementation: [src/lib/db/prisma.ts](./src/lib/db/prisma.ts)
+
+#### 5. Connection Testing
+Created a test utility to verify database connectivity:
+```bash
+npm run test:db
+```
+
+The test script performs the following checks:
+- ✅ Connects to PostgreSQL database
+- ✅ Retrieves database version information
+- ✅ Counts existing records in all tables
+- ✅ Gracefully disconnects after testing
+
+View the test script: [src/lib/db/test-connection.ts](./src/lib/db/test-connection.ts)
+
+### Schema Highlights
+
+**User Model:**
+```prisma
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(PATIENT)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  doctor        Doctor?
+  tokens        Token[]
+  consultations Consultation[]
+}
+```
+
+**Token Model (Queue Management):**
+```prisma
+model Token {
+  id                    String      @id @default(uuid())
+  tokenNumber           String      @unique
+  patientName           String
+  patientPhone          String
+  status                TokenStatus @default(WAITING)
+  position              Int?
+  estimatedWaitMinutes  Int?
+  joinedAt              DateTime    @default(now())
+  
+  // Relations
+  patient      User?         @relation(fields: [patientId], references: [id])
+  doctor       Doctor        @relation(fields: [doctorId], references: [id])
+  consultation Consultation?
+}
+```
+
+**Enums:**
+```prisma
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum TokenStatus {
+  WAITING
+  CALLED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+```
+
+### Benefits Realized
+
+1. **Type Safety**: TypeScript knows the exact shape of our database models
+   ```typescript
+   const user = await prisma.user.findUnique({ where: { email } });
+   // TypeScript knows user has id, email, name, etc.
+   // No runtime errors from typos or wrong field names
+   ```
+
+2. **Query Reliability**: Invalid queries are caught at compile time
+   ```typescript
+   // ❌ This would fail at compile time
+   await prisma.user.findMany({ where: { invalidField: 'value' } });
+   
+   // ✅ Only valid queries compile
+   await prisma.user.findMany({ where: { email: 'test@example.com' } });
+   ```
+
+3. **Developer Productivity**: 
+   - Auto-completion for all model fields and relations
+   - Inline documentation from schema comments
+   - Refactoring safety (rename fields in schema, updates propagate everywhere)
+   - No need to write raw SQL for common operations
+
+4. **Migration Safety**: Version-controlled database changes
+   ```bash
+   npx prisma migrate dev --name add_new_field
+   ```
+   - Generates SQL migration files
+   - Tracks schema changes in Git
+   - Easy rollback and deployment
+
+### Reflection
+
+Integrating Prisma ORM has significantly improved our development workflow:
+
+- **Reduced Bugs**: Type safety catches errors before runtime, preventing common database-related bugs like typos in field names or incorrect data types.
+
+- **Faster Development**: Auto-completion and IntelliSense eliminate the need to constantly reference documentation or database schemas.
+
+- **Better Collaboration**: The schema file serves as a single source of truth for the database structure, making it easy for team members to understand the data model.
+
+- **Production Confidence**: Migrations ensure database changes are tracked and can be deployed safely across environments without manual SQL execution.
+
+### Useful Commands
+
+```bash
+# Generate Prisma Client after schema changes
+npm run prisma:generate
+
+# Create and apply a new migration
+npm run prisma:migrate
+
+# Open Prisma Studio (GUI for viewing/editing data)
+npm run prisma:studio
+
+# Test database connection
+npm run test:db
+```
+
+### Next Steps
+
+- [x] Prisma installed and initialized
+- [x] Schema defined with all models
+- [x] Prisma Client generated successfully
+- [x] Database connection verified
+- [ ] Create seed data for development
+- [ ] Build API routes using Prisma queries
+- [ ] Add database migrations for schema evolutions
+

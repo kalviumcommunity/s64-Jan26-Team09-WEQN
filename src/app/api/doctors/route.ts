@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  getCached,
+  setCached,
+  generateCacheKey,
+  invalidateCachePattern,
+} from '@/lib/utils/cache';
 
 /**
  * GET /api/doctors
  * Fetch all doctors with pagination and filters
  * Query params: ?page=1&limit=10&department=Cardiology&available=true
+ * 
+ * Assignment 2.23: Caching Layer with Redis
+ * Cache strategy: Store doctor lists with 60-second TTL
+ * Cache invalidation: Triggered on doctor creation/updates
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +30,22 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Generate cache key based on query parameters
+    const cacheKey = generateCacheKey('doctors', {
+      page,
+      limit,
+      department: department || undefined,
+      available: available || undefined,
+    });
+
+    // ✅ Step 1: Check Redis cache first
+    const cachedResponse = await getCached(cacheKey);
+    if (cachedResponse) {
+      console.log(`✅ Cache HIT: ${cacheKey}`);
+      return NextResponse.json(cachedResponse, { status: 200 });
+    }
+    console.log(`❌ Cache MISS: ${cacheKey}`);
 
     // Mock data - Replace with actual database query
     const mockDoctors = [
@@ -77,21 +103,24 @@ export async function GET(request: NextRequest) {
     const startIndex = (page - 1) * limit;
     const paginatedDoctors = filteredDoctors.slice(startIndex, startIndex + limit);
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: paginatedDoctors,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1,
-        },
+    const responseData = {
+      success: true,
+      data: paginatedDoctors,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
       },
-      { status: 200 }
-    );
+    };
+
+    // ✅ Step 2: Cache the response for 60 seconds
+    await setCached(cacheKey, responseData, 60);
+    console.log(`💾 Cached response for 60s: ${cacheKey}`);
+
+    return NextResponse.json(responseData, { status: 200 });
   } catch (error) {
     console.error('Error fetching doctors:', error);
     return NextResponse.json(
@@ -105,6 +134,9 @@ export async function GET(request: NextRequest) {
  * POST /api/doctors
  * Create a new doctor profile
  * Body: { userId, department, specialization?, roomNumber?, avgConsultationMinutes? }
+ * 
+ * Assignment 2.23: Cache Invalidation
+ * When a doctor is created, clear all doctor-related cache entries
  */
 export async function POST(request: NextRequest) {
   try {
@@ -127,6 +159,11 @@ export async function POST(request: NextRequest) {
       isAvailable: validatedData.isAvailable,
       createdAt: new Date().toISOString(),
     };
+
+    // ✅ Step 3: Invalidate doctor cache after write operation
+    console.log('🔄 Invalidating doctor cache...');
+    await invalidateCachePattern('doctors:*');
+    console.log('✅ Doctor cache cleared');
 
     return NextResponse.json(
       {

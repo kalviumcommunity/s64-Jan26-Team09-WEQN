@@ -2465,3 +2465,117 @@ export default function RootLayout({ children }) {
 - Keyboard navigation (Link components)
 - Focus states on interactive elements
 
+---
+
+## 🔄 State Management with Context & Hooks (Assignment 2.28)
+
+### Overview
+
+Global state management using React Context API and custom hooks.
+
+**State Contexts:**
+- `AuthContext` - User authentication state
+- `UIContext` - Theme and sidebar preferences
+
+### AuthContext
+
+**Location:** [context/AuthContext.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/context/AuthContext.tsx)
+
+```tsx
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+// Provides:
+const { user, login, logout, isAuthenticated } = useAuthContext();
+
+// localStorage persistence
+login(userData);  // Saves to localStorage
+logout();         // Clears from localStorage
+```
+
+### UIContext
+
+**Location:** [context/UIContext.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/context/UIContext.tsx)
+
+```tsx
+// Provides:
+const { theme, toggleTheme, sidebarOpen, toggleSidebar } = useUIContext();
+
+// Theme toggle (persists to localStorage)
+toggleTheme();  // 'light' ↔ 'dark'
+```
+
+### Custom Hooks
+
+**useAuth** - [hooks/useAuth.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/hooks/useAuth.ts)
+```tsx
+import { useAuth } from '@/hooks/useAuth';
+
+function MyComponent() {
+  const { isAuthenticated, user, login, logout } = useAuth();
+  // Clean API, no direct context import
+}
+```
+
+**useUI** - [hooks/useUI.ts](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/hooks/useUI.ts)
+```tsx
+import { useUI } from '@/hooks/useUI';
+
+function MyComponent() {
+  const { theme, toggleTheme } = useUI();
+  // Access UI state anywhere
+}
+```
+
+### Global Providers
+
+**app/layout.tsx:**
+```tsx
+<AuthProvider>
+  <UIProvider>
+    <LayoutWrapper>{children}</LayoutWrapper>
+  </UIProvider>
+</AuthProvider>
+```
+
+**Result:** All components can access auth and UI state
+
+### Console Logs
+
+```bash
+[AuthContext] User logged in: demo@weqn.hospital
+[UIContext] Theme toggled to: dark
+[UIContext] Sidebar toggled: open
+[AuthContext] User logged out
+```
+
+### Demo Page
+
+Visit [/context-demo](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/app/context-demo/page.tsx) to see:
+- Login/logout with state persistence
+- Theme toggle (light/dark)
+- Sidebar toggle
+- Real-time console logs
+
+### Benefits
+
+**No Prop Drilling:**
+- Access state anywhere without passing props through components
+
+**Centralized State:**
+- Single source of truth for auth and UI
+- Consistent across all pages
+
+**Clean Components:**
+- Custom hooks abstract context complexity
+- Components stay simple and focused
+
+**Persistent:**
+- Auth user saved to localStorage
+- Theme preference saved to localStorage
+- Survives page refreshes
+

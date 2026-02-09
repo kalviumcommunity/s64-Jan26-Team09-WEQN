@@ -2465,3 +2465,172 @@ export default function RootLayout({ children }) {
 - Keyboard navigation (Link components)
 - Focus states on interactive elements
 
+---
+
+## 🎨 Feedback UI - Toasts, Modals & Loaders (Assignment 2.31)
+
+### Overview
+
+Production-ready user feedback mechanisms for clear communication with users. Implements toasts for instant feedback, modals for confirmations, and loaders for async operations.
+
+**Components:**
+- **Toast Notifications** - react-hot-toast for non-blocking feedback
+- **Modal Dialogs** - Accessible modals with focus trap and keyboard support
+- **Loaders** - Visual progress indicators with ARIA attributes
+
+### Toast Notifications
+
+```tsx
+import { useToast } from '@/hooks/useToast';
+
+const toast = useToast();
+
+toast.success('User created successfully!');
+toast.error('Failed to save data');
+toast.loading('Processing...');
+toast.info('New update available');
+```
+
+**Features:**
+- Auto-dismiss after configured duration
+- Promise-based API for async operations
+- Accessible (aria-live announcements)
+- Customizable position and styling
+
+### Modal Component
+
+**File:** [src/components/ui/Modal.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/ui/Modal.tsx)
+
+```tsx
+<Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Confirm Delete">
+  <p>Are you sure?</p>
+  <button onClick={handleConfirm}>Confirm</button>
+</Modal>
+```
+
+**Accessibility Features:**
+- Focus trap (Tab cycles within modal)
+- Esc key closes modal
+- Click outside to dismiss
+- ARIA attributes (role="dialog", aria-modal)
+- Body scroll lock when open
+
+### Loader Component
+
+**File:** [src/components/ui/Loader.tsx](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/components/ui/Loader.tsx)
+
+```tsx
+<Loader size="md" color="blue" text="Loading..." overlay />
+```
+
+**Features:**
+- Customizable size (sm/md/lg) and color
+- Optional overlay mode for blocking UI
+- ARIA live region for screen readers
+- Optional text label
+
+### Complete User Feedback Flow
+
+1. **User Action** → Click "Delete User" button
+2. **Confirmation** → Modal appears asking for confirmation
+3. **Loading** → Toast shows "Deleting..." progress
+4. **Success/Error** → Toast shows result
+5. **Cleanup** → Modal closes automatically
+
+### Demo
+
+Visit [/feedback-demo](file:///Users/rohan/Desktop/s64-Jan26-Team09-WEQN/src/app/feedback-demo/page.tsx) to see all feedback components in action.
+
+---
+
+## 🔐 Environment Variables (Assignment 2.31)
+
+### Overview
+
+Secure environment variable management using Next.js built-in support. Distinguishes between server-side secrets and client-accessible variables.
+
+### File Structure
+
+```
+.env.local         # Local environment (git-ignored)
+.env.example       # Template with placeholders
+.gitignore         # Ensures .env.local never committed
+```
+
+### Server-Side Variables
+
+Accessible ONLY in API routes and server components:
+
+```typescript
+// API Route or Server Component
+const dbUrl = process.env.DATABASE_URL;
+const jwtSecret = process.env.JWT_SECRET;
+```
+
+**Use for:**
+- Database URLs
+- API keys and secrets
+- Passwords and tokens
+- Private configuration
+
+**Security:** These are NEVER sent to the browser
+
+### Client-Side Variables
+
+Accessible in browser via `NEXT_PUBLIC_` prefix:
+
+```typescript
+// Any Component (Client or Server)
+const appName = process.env.NEXT_PUBLIC_APP_NAME;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+```
+
+**Use for:**
+- App name and version
+- Public API URLs
+- Feature flags
+- Non-sensitive configuration
+
+**Warning:** Anyone can see these values in browser DevTools
+
+### Environment Variables Documentation
+
+| Variable | Type | Purpose |
+|----------|------|---------|
+| `DATABASE_URL` | Server | PostgreSQL connection string |
+| `JWT_SECRET` | Server | JWT signing secret |
+| `REDIS_URL` | Server | Redis cache connection |
+| `SMTP_HOST/USER/PASSWORD` | Server | Email service credentials |
+| `NEXT_PUBLIC_APP_NAME` | Client | Application display name |
+| `NEXT_PUBLIC_API_URL` | Client | Public API base URL |
+| `NEXT_PUBLIC_ENVIRONMENT` | Client | Current environment (dev/prod) |
+
+### Security Best Practices
+
+1. **Never commit .env.local** - Already in .gitignore
+2. **Use .env.example** - Template for team members
+3. **Rotate secrets regularly** - Change production secrets periodically
+4. **Different secrets per environment** - Dev/staging/prod use different values
+5. **Validate at startup** - Check required variables exist
+6. **Never log secrets** - Don't console.log sensitive data
+
+### Reflection
+
+**What could go wrong if .env.local was pushed to GitHub?**
+
+1. **Database Compromise** - Attackers access production database
+2. **API Key Abuse** - Third-party services billed to your account
+3. **JWT Secret Leak** - Anyone can forge authentication tokens
+4. **Data Breach** - User data exposed via compromised credentials
+5. **Financial Loss** - AWS/Twilio/etc. accounts drained
+
+**How this setup prevents it:**
+
+- `.gitignore` blocks `.env.local` from being tracked
+- `.env.example` provides template without actual secrets
+- Git will reject commits containing `.env.local`
+- CI/CD pipelines use separate secret management
+- Team members generate their own local secrets
+
+---
+

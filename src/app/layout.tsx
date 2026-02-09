@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { LayoutWrapper } from '@/components';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from '@/context/AuthContext';
+import { UIProvider } from '@/context/UIContext';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -50,6 +52,11 @@ export default function RootLayout({
             },
           }}
         />
+        <AuthProvider>
+          <UIProvider>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </UIProvider>
+        </AuthProvider>
       </body>
     </html>
   );

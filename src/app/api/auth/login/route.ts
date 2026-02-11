@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
             role: user.role,
         });
 
-        // Return success with token
-        return sendSuccess(
+        // Assignment 2.42: Secure Cookie Configuration
+        // Create response and set secure, httpOnly, sameSite cookie
+        const response = sendSuccess(
             {
-                token,
                 user: {
                     id: user.id,
                     email: user.email,
@@ -96,6 +96,16 @@ export async function POST(request: NextRequest) {
             },
             'Login successful'
         );
+
+        response.cookies.set('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 3600, // 1 hour
+        });
+
+        return response;
     } catch (error) {
         console.error('Login error:', error);
 

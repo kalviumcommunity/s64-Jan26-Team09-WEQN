@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LayoutWrapper } from '@/components';
+import { ThemedLayout } from '@/components/common/ThemedLayout';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/context/AuthContext';
 import { UIProvider } from '@/context/UIContext';
@@ -16,39 +17,44 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <LayoutWrapper>{children}</LayoutWrapper>
-        <Toaster
-          position="top-right"
-          reverseOrder={false}
-          gutter={8}
-          toastOptions={{
-            duration: 4000,
-            style: {
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-            },
-            success: {
-              duration: 3000,
-              iconTheme: {
-                primary: '#10b981',
-                secondary: 'white',
+        <ThemedLayout>
+          <LayoutWrapper>{children}</LayoutWrapper>
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+            gutter={8}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
               },
-            },
-            error: {
-              duration: 5000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: 'white',
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: 'white',
+                },
               },
-            },
-            loading: {
-              iconTheme: {
-                primary: '#3b82f6',
-                secondary: 'white',
+              error: {
+                duration: 5000,
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: 'white',
+                },
               },
+              loading: {
+                iconTheme: {
+                  primary: '#3b82f6',
+                  secondary: 'white',
+                },
+              },
+            }}
+          />
+        </ThemedLayout>
             },
           }}
         />

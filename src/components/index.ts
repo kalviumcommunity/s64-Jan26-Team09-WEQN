@@ -15,3 +15,7 @@ export { default as LayoutWrapper } from './layout/LayoutWrapper';
 // UI components
 export { default as Button } from './ui/Button';
 export { default as Card } from './ui/Card';
+
+// Common Components (Theme)
+export { ThemeProvider } from './common/ThemeProvider';
+export { ThemeToggle } from './common/ThemeToggle';

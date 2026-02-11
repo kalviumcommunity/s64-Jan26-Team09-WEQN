@@ -7,6 +7,7 @@ import {
   sendNoContent,
 } from '@/lib/responseHandler';
 import { ERROR_CODES } from '@/lib/errorCodes';
+import { sanitize } from '@/lib/sanitize';
 
 /**
  * GET /api/users/[id]
@@ -17,7 +18,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Sanitize route parameters
+    const sanitizedParams = sanitize(params);
+    const { id } = sanitizedParams;
 
     // Mock data - Replace with actual database query
     const mockUser = {
@@ -55,16 +58,21 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Sanitize route parameters and body
+    const sanitizedParams = sanitize(params);
+    const { id } = sanitizedParams;
+    
     const body = await request.json();
+    const sanitizedBody = sanitize(body);
 
     // Validate that at least one field is provided
-    if (Object.keys(body).length === 0) {
+    if (Object.keys(sanitizedBody).length === 0) {
       return sendValidationError(
         'No fields provided for update',
         'At least one field must be provided to update'
       );
     }
+
 
     // Simulate user not found
     if (id !== 'usr_001') {

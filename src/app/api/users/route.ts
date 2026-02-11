@@ -13,6 +13,7 @@ import {
   generateCacheKey,
   invalidateCachePattern,
 } from '@/lib/utils/cache';
+import { sanitize } from '@/lib/sanitize';
 
 /**
  * GET /api/users
@@ -25,12 +26,21 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const role = searchParams.get('role');
+    
+    // Sanitize query parameters
+    const queryParams = {
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '10',
+      role: searchParams.get('role'),
+    };
+    const sanitizedQuery = sanitize(queryParams);
+
+    const page = parseInt(sanitizedQuery.page);
+    const limit = parseInt(sanitizedQuery.limit);
+    const role = sanitizedQuery.role;
 
     // Validate pagination parameters
-    if (page < 1 || limit < 1 || limit > 100) {
+    if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1 || limit > 100) {
       return sendValidationError(
         'Invalid pagination parameters',
         'Page must be >= 1, limit must be between 1-100'
@@ -45,7 +55,7 @@ export async function GET(request: NextRequest) {
     });
 
     // ✅ Step 1: Check Redis cache first
-    const cachedResponse = await getCached(cacheKey);
+    const cachedResponse = await getCached<any>(cacheKey);
     if (cachedResponse) {
       console.log(`✅ Cache HIT: ${cacheKey}`);
       return sendSuccess(cachedResponse.data, cachedResponse.message, 200, cachedResponse.pagination);
@@ -123,12 +133,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Sanitize input body
+    const sanitizedBody = sanitize(body);
 
-    // Validate with Zod
+    // Validate with Zod after sanitization
     const { createUserSchema } = await import('@/lib/validators/user');
     const { ZodError } = await import('zod');
 
-    const validatedData = createUserSchema.parse(body);
+    const validatedData = createUserSchema.parse(sanitizedBody);
 
     // Mock user creation - Replace with actual database insert
     const newUser = {

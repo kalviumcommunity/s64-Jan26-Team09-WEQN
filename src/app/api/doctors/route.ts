@@ -5,23 +5,30 @@ import {
   generateCacheKey,
   invalidateCachePattern,
 } from '@/lib/utils/cache';
+import { sanitize } from '@/lib/sanitize';
 
 /**
  * GET /api/doctors
  * Fetch all doctors with pagination and filters
  * Query params: ?page=1&limit=10&department=Cardiology&available=true
- * 
- * Assignment 2.23: Caching Layer with Redis
- * Cache strategy: Store doctor lists with 60-second TTL
- * Cache invalidation: Triggered on doctor creation/updates
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const department = searchParams.get('department');
-    const available = searchParams.get('available');
+    
+    // Sanitize query parameters
+    const query = {
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '10',
+      department: searchParams.get('department'),
+      available: searchParams.get('available'),
+    };
+    const sanitizedQuery = sanitize(query);
+
+    const page = parseInt(sanitizedQuery.page);
+    const limit = parseInt(sanitizedQuery.limit);
+    const department = sanitizedQuery.department;
+    const available = sanitizedQuery.available;
 
     // Validate pagination
     if (page < 1 || limit < 1 || limit > 100) {
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
     });
 
     // ✅ Step 1: Check Redis cache first
-    const cachedResponse = await getCached(cacheKey);
+    const cachedResponse = await getCached<any>(cacheKey);
     if (cachedResponse) {
       console.log(`✅ Cache HIT: ${cacheKey}`);
       return NextResponse.json(cachedResponse, { status: 200 });
@@ -141,12 +148,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Sanitize input body
+    const sanitizedBody = sanitize(body);
 
-    // Validate with Zod
+    // Validate with Zod after sanitization
     const { createDoctorSchema } = await import('@/lib/validators/doctor');
     const { ZodError } = await import('zod');
 
-    const validatedData = createDoctorSchema.parse(body);
+    const validatedData = createDoctorSchema.parse(sanitizedBody);
 
     // Mock doctor creation
     const newDoctor = {

@@ -7,6 +7,7 @@ import {
   calculatePagination,
 } from '@/lib/responseHandler';
 import { ERROR_CODES } from '@/lib/errorCodes';
+import { sanitize } from '@/lib/sanitize';
 
 /**
  * GET /api/tokens
@@ -16,18 +17,29 @@ import { ERROR_CODES } from '@/lib/errorCodes';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const doctorId = searchParams.get('doctorId');
-    const status = searchParams.get('status');
+    
+    // Sanitize query parameters
+    const query = {
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '10',
+      doctorId: searchParams.get('doctorId'),
+      status: searchParams.get('status'),
+    };
+    const sanitizedQuery = sanitize(query);
+
+    const page = parseInt(sanitizedQuery.page);
+    const limit = parseInt(sanitizedQuery.limit);
+    const doctorId = sanitizedQuery.doctorId;
+    const status = sanitizedQuery.status;
 
     // Validate pagination
-    if (page < 1 || limit < 1 || limit > 100) {
+    if (isNaN(page) || page < 1 || isNaN(limit) || limit < 1 || limit > 100) {
       return sendValidationError(
         'Invalid pagination parameters',
         'Page must be >= 1, limit must be between 1-100'
       );
     }
+
 
     // Validate status if provided
     const validStatuses = ['WAITING', 'CALLED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
@@ -108,12 +120,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Sanitize input body
+    const sanitizedBody = sanitize(body);
 
-    // Validate with Zod
+    // Validate with Zod after sanitization
     const { createTokenSchema } = await import('@/lib/validators/token');
     const { ZodError } = await import('zod');
 
-    const validatedData = createTokenSchema.parse(body);
+    const validatedData = createTokenSchema.parse(sanitizedBody);
 
     // Mock token creation
     const newToken = {

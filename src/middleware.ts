@@ -5,7 +5,15 @@ import jwt from 'jsonwebtoken';
 /**
  * JWT Configuration
  */
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    console.error('❌ FATAL: JWT_SECRET is not defined in environment variables');
+    // In production, we should throw an error to prevent the app from starting with insecure configuration
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_SECRET must be set in production');
+    }
+}
 
 /**
  * JWT Payload Interface
@@ -78,8 +86,12 @@ export function middleware(request: NextRequest) {
     }
 
     try {
+        if (!JWT_SECRET) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         // Verify JWT and decode payload
-        const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+        const decoded = jwt.verify(token, JWT_SECRET) as unknown as JWTPayload;
 
         // Check role-based authorization
         const allowedRoles = PROTECTED_ROUTES[protectedRoute as keyof typeof PROTECTED_ROUTES];

@@ -52,6 +52,14 @@ const PUBLIC_ROUTES = [
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
+    // Assignment 2.42: Enforce HTTPS at Application Level
+    // Detects 'http' protocol from load balancer via x-forwarded-proto header
+    const proto = request.headers.get('x-forwarded-proto');
+    if (process.env.NODE_ENV === 'production' && proto === 'http') {
+        const httpsUrl = `https://${request.headers.get('host')}${pathname}`;
+        return NextResponse.redirect(httpsUrl, 301);
+    }
+
     // Skip middleware for public routes
     if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
         return NextResponse.next();

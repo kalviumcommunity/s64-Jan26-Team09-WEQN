@@ -7,11 +7,11 @@ import { z } from 'zod';
 
 // Create token schema (join queue)
 export const createTokenSchema = z.object({
-    patientName: z.string().min(2, 'Patient name must be at least 2 characters'),
-    patientPhone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number format'),
+    patientName: z.string().trim().min(2, 'Patient name must be at least 2 characters'),
+    patientPhone: z.string().trim().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number format'),
     patientId: z.string().uuid('Invalid patient ID format').optional(),
     doctorId: z.string().uuid('Invalid doctor ID format'),
-});
+}).strict();
 
 // Update token schema
 export const updateTokenSchema = z.object({
@@ -19,7 +19,7 @@ export const updateTokenSchema = z.object({
         errorMap: () => ({ message: 'Invalid status value' }),
     }).optional(),
     position: z.number().int().nonnegative().optional(),
-});
+}).strict();
 
 // Export types
 export type CreateTokenInput = z.infer<typeof createTokenSchema>;

@@ -1,13 +1,15 @@
 // Prisma Schema for Digital Queue Management System
-// Database: Neon PostgreSQL (Serverless)
+// Assignment 2.38: Cloud Database Configuration (RDS / Azure SQL / Managed PostgreSQL)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl is used for migrations in serverless/cloud environments
+  // Ensure sslmode=require is set in the environment variable connection strings
   directUrl = env("DIRECT_DATABASE_URL")
 }
 

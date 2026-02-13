@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
+import { logger } from '@/lib/logger';
 
 /**
  * JWT Configuration
@@ -51,6 +52,15 @@ const PUBLIC_ROUTES = [
  */
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const requestId = crypto.randomUUID();
+
+    // Assignment 2.43: Structured Request Logging
+    logger.info(`Incoming ${request.method} request to ${pathname}`, {
+        requestId,
+        method: request.method,
+        route: pathname,
+        userAgent: request.headers.get('user-agent') || undefined,
+    });
 
     // Assignment 2.42: Enforce HTTPS at Application Level
     // Detects 'http' protocol from load balancer via x-forwarded-proto header
@@ -62,7 +72,13 @@ export function middleware(request: NextRequest) {
 
     // Skip middleware for public routes
     if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
-        return NextResponse.next();
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-request-id', requestId);
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
     }
 
     // Check if route requires protection
@@ -72,7 +88,13 @@ export function middleware(request: NextRequest) {
 
     if (!protectedRoute) {
         // Route not explicitly protected, allow access
-        return NextResponse.next();
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-request-id', requestId);
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
     }
 
     // Extract and verify JWT token
@@ -120,6 +142,7 @@ export function middleware(request: NextRequest) {
 
         // Attach user info to request headers for downstream use
         const requestHeaders = new Headers(request.headers);
+        requestHeaders.set('x-request-id', requestId);
         requestHeaders.set('x-user-id', decoded.id);
         requestHeaders.set('x-user-email', decoded.email);
         requestHeaders.set('x-user-role', decoded.role);

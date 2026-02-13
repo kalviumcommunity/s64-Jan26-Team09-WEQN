@@ -50,9 +50,10 @@ export class AppError extends Error {
  * 
  * @param error - Error object (can be Error, AppError, or any)
  * @param context - Context string describing where error occurred (e.g., "GET /api/users")
+ * @param requestId - Optional request ID for log correlation
  * @returns NextResponse with formatted error
  */
-export function handleError(error: any, context: string): NextResponse {
+export function handleError(error: any, context: string, requestId?: string): NextResponse {
     const isProd = process.env.NODE_ENV === 'production';
 
     // Determine error type and status code
@@ -77,6 +78,7 @@ export function handleError(error: any, context: string): NextResponse {
         error: {
             type: errorType,
             code: `E${statusCode}`,
+            requestId, // Include requestId in response for client-side support/debugging
         },
     };
 
@@ -86,11 +88,10 @@ export function handleError(error: any, context: string): NextResponse {
     }
 
     // Log full error details (always logged, even in production)
-    logger.error(`Error in ${context}`, {
-        message: error.message || 'Unknown error',
+    logger.error(`Error in ${context}`, error, {
+        requestId,
         type: errorType,
         statusCode,
-        stack: isProd ? 'REDACTED' : error.stack,
         isOperational: error instanceof AppError ? error.isOperational : false,
     });
 

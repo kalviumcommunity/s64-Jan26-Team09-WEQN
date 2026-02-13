@@ -1,93 +1,92 @@
 /**
- * Structured Logger Utility
- * 
- * Provides consistent, JSON-formatted logging for production observability.
- * Supports different log levels (info, warn, error) with timestamps and metadata.
+ * Structured Logging System for Cloud Environments (CloudWatch/Azure Monitor)
+ * Implementation for Assignment 2.43
  */
 
-/**
- * Log level type
- */
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
-/**
- * Log metadata interface
- */
-interface LogMetadata {
+interface LogPayload {
+    message: string;
+    level: LogLevel;
+    timestamp: string;
+    requestId?: string;
+    route?: string;
+    method?: string;
+    statusCode?: number;
+    error?: any;
     [key: string]: any;
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 /**
- * Structured log entry
+ * Formats and outputs the log to stdout/stderr
  */
-interface LogEntry {
-    level: LogLevel;
-    message: string;
-    meta?: LogMetadata;
-    timestamp: string;
-    environment: string;
+function log(payload: LogPayload) {
+    if (isProduction) {
+        // Structured JSON for CloudWatch/Azure Monitor
+        console.log(JSON.stringify(payload));
+    } else {
+        // Pretty logging for development
+        const color = payload.level === 'error' ? '\x1b[31m' : 
+                      payload.level === 'warn' ? '\x1b[33m' : 
+                      payload.level === 'info' ? '\x1b[36m' : '\x1b[90m';
+        const reset = '\x1b[0m';
+        
+        console.log(
+            `${color}[${payload.level.toUpperCase()}]${reset} ${payload.timestamp} - ${payload.message}`,
+            payload.error ? payload.error : '',
+            Object.keys(payload).filter(k => !['message', 'level', 'timestamp', 'error'].includes(k)).length > 0 
+                ? JSON.stringify(Object.fromEntries(Object.entries(payload).filter(([k]) => !['message', 'level', 'timestamp', 'error'].includes(k))))
+                : ''
+        );
+    }
 }
 
 /**
- * Create structured log entry
- */
-function createLogEntry(
-    level: LogLevel,
-    message: string,
-    meta?: LogMetadata
-): LogEntry {
-    return {
-        level,
-        message,
-        meta,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-    };
-}
-
-/**
- * Logger utility with structured output
+ * Logger Utility
  */
 export const logger = {
-    /**
-     * Log informational message
-     */
-    info: (message: string, meta?: LogMetadata) => {
-        const entry = createLogEntry('info', message, meta);
-        console.log(JSON.stringify(entry));
+    info(message: string, context: Partial<LogPayload> = {}) {
+        log({
+            ...context,
+            message,
+            level: 'info',
+            timestamp: new Date().toISOString(),
+        });
     },
 
-    /**
-     * Log warning message
-     */
-    warn: (message: string, meta?: LogMetadata) => {
-        const entry = createLogEntry('warn', message, meta);
-        console.warn(JSON.stringify(entry));
+    warn(message: string, context: Partial<LogPayload> = {}) {
+        log({
+            ...context,
+            message,
+            level: 'warn',
+            timestamp: new Date().toISOString(),
+        });
     },
 
-    /**
-     * Log error message
-     */
-    error: (message: string, meta?: LogMetadata) => {
-        const entry = createLogEntry('error', message, meta);
-        console.error(JSON.stringify(entry));
+    error(message: string, error?: any, context: Partial<LogPayload> = {}) {
+        log({
+            ...context,
+            message,
+            level: 'error',
+            timestamp: new Date().toISOString(),
+            error: error instanceof Error ? {
+                name: error.name,
+                message: error.message,
+                stack: isProduction ? undefined : error.stack // Hide stack in production JSON logs to keep them clean, unless specifically needed
+            } : error,
+        });
     },
 
-    /**
-     * Log debug message (only in development)
-     */
-    debug: (message: string, meta?: LogMetadata) => {
-        if (process.env.NODE_ENV !== 'production') {
-            const entry = createLogEntry('debug', message, meta);
-            console.debug(JSON.stringify(entry));
+    debug(message: string, context: Partial<LogPayload> = {}) {
+        if (!isProduction) {
+            log({
+                ...context,
+                message,
+                level: 'debug',
+                timestamp: new Date().toISOString(),
+            });
         }
-    },
+    }
 };
-
-/**
- * Example usage:
- * 
- * logger.info('User logged in', { userId: '123', email: 'user@example.com' });
- * logger.error('Database connection failed', { error: err.message, stack: err.stack });
- * logger.warn('Rate limit approaching', { currentRequests: 95, limit: 100 });
- */

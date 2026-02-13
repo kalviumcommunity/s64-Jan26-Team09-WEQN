@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
 import { generateToken } from '@/lib/auth/jwt';
+import { logger } from '@/lib/logger';
+import { handleError } from '@/lib/errorHandler';
 import {
     sendSuccess,
     sendValidationError,
@@ -25,6 +27,8 @@ const loginSchema = z.object({
  * Body: { email, password }
  */
 export async function POST(request: NextRequest) {
+    const requestId = request.headers.get('x-request-id') || undefined;
+    
     try {
         const body = await request.json();
 
@@ -45,11 +49,13 @@ export async function POST(request: NextRequest) {
         });
 
         if (!user) {
+            logger.warn(`Login failed: User not found`, { email: validatedData.email, requestId });
             return sendNotFoundError('User', 'No account found with this email');
         }
 
         // Check if account is active
         if (!user.isActive) {
+            logger.warn(`Login failed: Account deactivated`, { userId: user.id, requestId });
             return NextResponse.json(
                 {
                     success: false,
@@ -70,6 +76,7 @@ export async function POST(request: NextRequest) {
         );
 
         if (!isPasswordValid) {
+            logger.warn(`Login failed: Invalid password`, { userId: user.id, requestId });
             return sendUnauthorizedError(
                 'Invalid credentials',
                 'Email or password is incorrect'
@@ -82,6 +89,8 @@ export async function POST(request: NextRequest) {
             email: user.email,
             role: user.role,
         });
+
+        logger.info(`Login successful`, { userId: user.id, role: user.role, requestId });
 
         // Assignment 2.42: Secure Cookie Configuration
         // Create response and set secure, httpOnly, sameSite cookie
@@ -107,19 +116,6 @@ export async function POST(request: NextRequest) {
 
         return response;
     } catch (error) {
-        console.error('Login error:', error);
-
-        // Handle Zod validation errors
-        if (error instanceof z.ZodError) {
-            return sendValidationError(
-                'Validation failed',
-                error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')
-            );
-        }
-
-        return sendInternalError(
-            'Login failed',
-            error instanceof Error ? error.message : undefined
-        );
+        return handleError(error, 'POST /api/auth/login', requestId);
     }
 }

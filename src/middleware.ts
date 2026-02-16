@@ -63,11 +63,16 @@ export function middleware(request: NextRequest) {
     });
 
     // Assignment 2.42: Enforce HTTPS at Application Level
-    // Detects 'http' protocol from load balancer via x-forwarded-proto header
-    const proto = request.headers.get('x-forwarded-proto');
-    if (process.env.NODE_ENV === 'production' && proto === 'http') {
-        const httpsUrl = `https://${request.headers.get('host')}${pathname}`;
-        return NextResponse.redirect(httpsUrl, 301);
+    // Prefer x-forwarded-proto from load balancer but also fall back to the request URL
+    if (process.env.NODE_ENV === 'production') {
+        const proto = request.headers.get('x-forwarded-proto');
+        const isHttpFromHeader = proto === 'http';
+        const isHttpFromUrl = request.nextUrl.protocol === 'http:';
+
+        if (isHttpFromHeader || (!proto && isHttpFromUrl)) {
+            const httpsUrl = `https://${request.headers.get('host')}${pathname}`;
+            return NextResponse.redirect(httpsUrl, 301);
+        }
     }
 
     // Skip middleware for public routes

@@ -6,6 +6,7 @@ import {
   invalidateCachePattern,
 } from '@/lib/utils/cache';
 import { sanitize } from '@/lib/sanitize';
+import { requireRole } from '@/lib/auth/middleware';
 
 /**
  * GET /api/doctors
@@ -14,6 +15,12 @@ import { sanitize } from '@/lib/sanitize';
  */
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireRole(request, ['ADMIN', 'DOCTOR']);
+
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
     const searchParams = request.nextUrl.searchParams;
     
     // Sanitize query parameters
@@ -147,6 +154,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireRole(request, ['ADMIN', 'DOCTOR']);
+
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
     const body = await request.json();
     
     // Sanitize input body

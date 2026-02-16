@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
+import type { Role } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET ?? '';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '1h';
@@ -14,7 +15,7 @@ if (!JWT_SECRET) {
 export interface JWTPayload {
     id: string;
     email: string;
-    role: string;
+    role: Role;
 }
 
 export function generateToken(payload: JWTPayload): string {
@@ -22,7 +23,7 @@ export function generateToken(payload: JWTPayload): string {
         throw new Error('JWT_SECRET is not configured');
     }
 
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    return (jwt as any).sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 
 /**

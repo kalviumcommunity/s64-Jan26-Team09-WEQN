@@ -5,6 +5,9 @@ import {
     sendUnauthorizedError,
     sendForbiddenError,
 } from '@/lib/responseHandler';
+import { logger } from '@/lib/logger';
+
+type RoleString = 'ADMIN' | 'DOCTOR' | 'PATIENT';
 
 /**
  * Authentication middleware for protected routes
@@ -28,6 +31,11 @@ export async function requireAuth(request: NextRequest) {
     const user = authenticateRequest(request);
 
     if (!user) {
+        logger.warn('Unauthorized access attempt', {
+            route: request.nextUrl.pathname,
+            method: request.method,
+        });
+
         return {
             error: sendUnauthorizedError(
                 'Authentication required',
@@ -49,7 +57,7 @@ export async function requireAuth(request: NextRequest) {
  */
 export async function requireRole(
     request: NextRequest,
-    allowedRoles: string[]
+    allowedRoles: RoleString[]
 ) {
     const authResult = await requireAuth(request);
 
@@ -59,7 +67,14 @@ export async function requireRole(
 
     const { user } = authResult;
 
-    if (!allowedRoles.includes(user.role)) {
+    if (!allowedRoles.includes(user.role as RoleString)) {
+        logger.warn('Forbidden access attempt', {
+            route: request.nextUrl.pathname,
+            method: request.method,
+            role: user.role,
+            allowedRoles,
+        });
+
         return {
             error: sendForbiddenError(
                 'Insufficient permissions',

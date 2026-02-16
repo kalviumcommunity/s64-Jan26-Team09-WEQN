@@ -1,24 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSuccess } from '@/lib/responseHandler';
+import { requireRole } from '@/lib/auth/middleware';
 
 /**
  * GET /api/admin
  * Admin-only dashboard endpoint
- * Requires ADMIN role (enforced by middleware)
+ * Requires ADMIN role
  */
 export async function GET(request: NextRequest) {
-    // User info is attached by middleware
-    const userId = request.headers.get('x-user-id');
-    const userEmail = request.headers.get('x-user-email');
-    const userRole = request.headers.get('x-user-role');
+    const authResult = await requireRole(request, ['ADMIN']);
+
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    const { user } = authResult;
 
     return sendSuccess(
         {
             message: 'Welcome to the Admin Dashboard!',
             admin: {
-                id: userId,
-                email: userEmail,
-                role: userRole,
+                id: user.id,
+                email: user.email,
+                role: user.role,
             },
             access: {
                 canManageUsers: true,
@@ -36,16 +40,22 @@ export async function GET(request: NextRequest) {
  * Example admin action - system configuration
  */
 export async function POST(request: NextRequest) {
+    const authResult = await requireRole(request, ['ADMIN']);
+
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
     try {
         const body = await request.json();
-        const userEmail = request.headers.get('x-user-email');
+        const { user } = authResult;
 
         // Mock admin action
         return sendSuccess(
             {
                 message: 'Admin action executed successfully',
                 action: body.action || 'system_config_update',
-                executedBy: userEmail,
+                executedBy: user.email,
                 timestamp: new Date().toISOString(),
             },
             'Configuration updated'

@@ -16,13 +16,12 @@ if (!JWT_SECRET) {
     }
 }
 
-/**
- * JWT Payload Interface
- */
+type RoleString = 'ADMIN' | 'DOCTOR' | 'PATIENT';
+
 interface JWTPayload {
     id: string;
     email: string;
-    role: string;
+    role: RoleString;
 }
 
 /**

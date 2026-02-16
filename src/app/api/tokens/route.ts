@@ -8,6 +8,7 @@ import {
 } from '@/lib/responseHandler';
 import { ERROR_CODES } from '@/lib/errorCodes';
 import { sanitize } from '@/lib/sanitize';
+import { requireRole } from '@/lib/auth/middleware';
 
 /**
  * GET /api/tokens
@@ -16,6 +17,12 @@ import { sanitize } from '@/lib/sanitize';
  */
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireRole(request, ['ADMIN', 'DOCTOR', 'PATIENT']);
+
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
     const searchParams = request.nextUrl.searchParams;
     
     // Sanitize query parameters
@@ -119,6 +126,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireRole(request, ['PATIENT']);
+
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+
     const body = await request.json();
     
     // Sanitize input body

@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
+import type { Role } from '@prisma/client';
 
 export interface AuthTokenPayload {
     id: string;
     email: string;
-    role: string;
+    role: Role;
 }
 
 const accessTokenSecret = process.env.JWT_SECRET;

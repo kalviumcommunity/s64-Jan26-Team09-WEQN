@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { prisma } from '@/lib/db/prisma';
-import { generateToken } from '@/lib/auth/jwt';
+import { generateAccessToken, generateRefreshToken } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { handleError } from '@/lib/errorHandler';
 import {
@@ -83,8 +83,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Generate JWT token
-        const token = generateToken({
+        const accessToken = generateAccessToken({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+        });
+
+        const refreshToken = generateRefreshToken({
             id: user.id,
             email: user.email,
             role: user.role,
@@ -92,10 +97,9 @@ export async function POST(request: NextRequest) {
 
         logger.info(`Login successful`, { userId: user.id, role: user.role, requestId });
 
-        // Assignment 2.42: Secure Cookie Configuration
-        // Create response and set secure, httpOnly, sameSite cookie
         const response = sendSuccess(
             {
+                accessToken,
                 user: {
                     id: user.id,
                     email: user.email,
@@ -106,12 +110,20 @@ export async function POST(request: NextRequest) {
             'Login successful'
         );
 
-        response.cookies.set('auth_token', token, {
+        response.cookies.set('auth_token', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             path: '/',
-            maxAge: 3600, // 1 hour
+            maxAge: 15 * 60,
+        });
+
+        response.cookies.set('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60,
         });
 
         return response;

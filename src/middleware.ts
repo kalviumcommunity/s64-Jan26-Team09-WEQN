@@ -97,18 +97,21 @@ export function middleware(request: NextRequest) {
         });
     }
 
-    // Extract and verify JWT token
     const authHeader = request.headers.get('authorization');
-    const token = authHeader?.split(' ')[1];
+    const bearerToken = authHeader?.startsWith('Bearer ')
+        ? authHeader.split(' ')[1]
+        : undefined;
+    const cookieToken = request.cookies.get('auth_token')?.value;
+    const token = bearerToken || cookieToken;
 
     if (!token) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Authentication required',
+                    message: 'Authentication required',
                 error: {
                     code: 'E101',
-                    details: 'Please provide a valid token in Authorization header',
+                        details: 'Authentication token is missing',
                 },
             },
             { status: 401 }
@@ -158,10 +161,10 @@ export function middleware(request: NextRequest) {
         return NextResponse.json(
             {
                 success: false,
-                message: 'Invalid or expired token',
+                message: 'Authentication failed',
                 error: {
                     code: 'E103',
-                    details: error instanceof Error ? error.message : 'Token verification failed',
+                    details: 'Token verification failed',
                 },
             },
             { status: 403 }

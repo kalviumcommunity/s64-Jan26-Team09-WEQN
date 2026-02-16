@@ -1,27 +1,27 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 
-/**
- * JWT Configuration
- */
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRY = '1h'; // Token expires in 1 hour
+const JWT_SECRET = process.env.JWT_SECRET ?? '';
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '1h';
 
-/**
- * JWT Payload Interface
- */
+if (!JWT_SECRET) {
+    console.error('JWT_SECRET is not defined in environment variables');
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('JWT_SECRET must be set in production');
+    }
+}
+
 export interface JWTPayload {
     id: string;
     email: string;
     role: string;
 }
 
-/**
- * Generate JWT token for authenticated user
- * @param payload - User data to encode in token
- * @returns Signed JWT token string
- */
 export function generateToken(payload: JWTPayload): string {
+    if (!JWT_SECRET) {
+        throw new Error('JWT_SECRET is not configured');
+    }
+
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 }
 
@@ -32,6 +32,10 @@ export function generateToken(payload: JWTPayload): string {
  */
 export function verifyToken(token: string): JWTPayload | null {
     try {
+        if (!JWT_SECRET) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
         return decoded;
     } catch (error) {
